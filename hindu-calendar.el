@@ -1,4 +1,4 @@
-;;; hindu-calendar.el --- A simplified Hindu calendar (panchanga)  -*- lexical-binding:t -*-
+;;; hindu-calendar.el --- Arithmetical traditional Hindu calendar (panchanga)  -*- lexical-binding:t -*-
 
 ;; Copyright (C) 2024 B.D.Satish <bdsatish@gmail.com>
 
@@ -45,6 +45,8 @@
 ;; Sidereal solar:          M-x hindu-calendar-sidereal-solar
 ;; Tropical solar:          M-x hindu-calendar-tropical-solar
 ;; Nakshatra (sidereal):    M-x hindu-calendar-asterism
+;;
+;; See README.md for more instructions.
 
 ;;; Sanity:
 ;; M-x package-lint-current-buffer  (after M-x reinstall-package RET package-lint)
@@ -233,10 +235,47 @@
 
 ;;------------------------------ FRONTEND CODE ----------------------------------
 
+(defgroup hindu-calendar-group nil
+  "Settings for Hindu calendar."
+  :group 'calendar)
+
+(defcustom hindu-calendar-month-type "Chaitra"
+  "Type of month names.  One of Chaitra, Mesha, Madhu, Kesava, or Dhata."
+  :type '(choice (const :tag "Chaitra, Vaisakha,..." "Chaitra")
+                 (const :tag "Mesha, Vrishabha,..." "Mesha")
+                 (const :tag "Madhu, Madhava,..." "Madhu")
+                 (const :tag "Dhata, Aryaman,..." "Dhata")
+		 (const :tag "Kesava, Narayana,..." "Kesava"))
+  :group 'hindu-calendar-group)
+
+(defcustom hindu-calendar-epoch-type "Kali"
+  "Type of epoch to reckon years.  One of Kali, Vikrama, Saka, or Bengali."
+  :type '(choice (const :tag "Kali Yuga (elapsed)" "Kali")
+                 (const :tag "Vikrama samvat" "Vikrama")
+                 (const :tag "Salivahana saka" "Saka")
+                 (const :tag "Bengali san" "Bengali"))
+  :group 'hindu-calendar-group)
+
 ; Spelling as per the Rashtriya Panchang
-(defconst hindu-calendar--month-names
+(defconst hindu-calendar--chaitra-months
   (list "" "Chaitra" "Vaisakha" "Jyaishtha" "Ashadha" "Sravana" "Bhadrapada"
         "Asvina" "Kartika" "Margasirsa" "Pausha" "Magha" "Phalguna"))
+
+(defconst hindu-calendar--mesha-months
+  (list "" "Mesha" "Vrishabha" "Mithuna" "Karkata" "Simha" "Kanya"
+	"Tula" "Vrischika" "Dhanus" "Makara" "Kumbha" "Mina"))
+
+(defconst hindu-calendar--madhu-months
+  (list "" "Madhu" "Madhava" "Sukra" "Suchi" "Nabhas" "Nabhasya"
+	"Isha" "Urja" "Sahas" "Sahasya" "Tapas" "Tapasya"))
+
+(defconst hindu-calendar--kesava-months
+  (list "" "Vishnu" "Madhusudana" "Trivikrama" "Vamana" "Sridhara" "Hrishikesa"
+	"Padmanabha" "Damodara" "Kesava" "Narayana" "Madhava" "Govinda"))
+
+(defconst hindu-calendar--dhata-months
+  (list "" "Dhata" "Aryama" "Mitra" "Varuna" "Indra" "Vivasvan"
+	"Tvashta" "Vishnu" "Amsuman" "Bhaga" "Pusha" "Parjanya"))
 
 (defconst hindu-calendar--nakshatra-names
   (list "" "Asvini" "Bharani" "Krittika" "Rohini" "Mrigasiras" "Ardra"
@@ -250,6 +289,33 @@
   (if (> tithi 15)
       (format "K%02d" (- tithi 15))
       (format "S%02d" tithi)))
+
+;; Conversion functions for epochs. `checkdoc' does not complain about `fset'.
+; (fset 'hindu-calendar--vikrama (lambda (kali) (- kali 3044)))
+
+(defun hindu-calendar--convert-epoch (year epoch-type)
+  "Convert Kali-yuga elapsed `YEAR' into `EPOCH-TYPE' (Saka, Vikrama,...)."
+  (cond
+   ((string= (downcase epoch-type) "vikrama")
+    (- year 3044))
+   ((string= (downcase epoch-type) "saka")
+    (- year 3179))
+   ((string= (downcase epoch-type) "bengali")
+    (- year 3694))
+   (t year))) ; default is Kali Year itself
+
+(defun hindu-calendar--convert-month (month month-type)
+  "Convert `MONTH' number into name of `MONTH-TYPE' (Chaitra, Mesha,...)."
+  (cond
+   ((string= (downcase month-type) "mesha")
+    (nth month hindu-calendar--mesha-months))
+   ((string= (downcase month-type) "madhu")
+    (nth month hindu-calendar--madhu-months))
+   ((string= (downcase month-type) "kesava")
+    (nth month hindu-calendar--kesava-months))
+   ((string= (downcase month-type) "dhata")
+    (nth month hindu-calendar--dhata-months))
+   (t (nth month hindu-calendar--chaitra-months)))) ; default is Chaitra-type
 
 ;;;###autoload
 (defun hindu-calendar-tropical-solar (&optional year month date)
@@ -267,9 +333,11 @@ It is equivalent to Indian National Calendar civil date used by the Indian govt.
          (h-day (nth 2 h-date))
 	 (result ""))
     (setq result (format "%s-%02d, %d"
-                         (nth h-month hindu-calendar--month-names)
+                         (hindu-calendar--convert-month h-month
+							hindu-calendar-month-type)
                          h-day
-                         h-year))
+                         (hindu-calendar--convert-epoch h-year
+							hindu-calendar-epoch-type)))
     (if (called-interactively-p 'any) (insert result) result)))
 
 ;;;###autoload
@@ -289,9 +357,11 @@ It is equivalent to Indian National Calendar civil date used by the Indian govt.
 	 (result ""))
     (setq result (format "%s%s-%s, %d"
                          (if h-leap? "Adhika-" "")
-                         (nth h-month hindu-calendar--month-names)
+                         (hindu-calendar--convert-month h-month
+							hindu-calendar-month-type)
                          (hindu-calendar--tithi-to-paksha h-day)
-                         h-year))
+                         (hindu-calendar--convert-epoch h-year
+							hindu-calendar-epoch-type)))
     (if (called-interactively-p 'any) (insert result) result)))
 
 ;;;###autoload
@@ -309,9 +379,11 @@ It is equivalent to Indian National Calendar civil date used by the Indian govt.
          (h-day (nth 2 h-date))
 	 (result ""))
     (setq result (format "%s-%02d, %d"
-                         (nth h-month hindu-calendar--month-names)
+                         (hindu-calendar--convert-month h-month
+							hindu-calendar-month-type)
                          h-day
-                         h-year))
+                         (hindu-calendar--convert-epoch h-year
+							hindu-calendar-epoch-type)))
     (if (called-interactively-p 'any) (insert result) result)))
 
 ;;;###autoload
@@ -331,9 +403,11 @@ It is equivalent to Indian National Calendar civil date used by the Indian govt.
 	 (result ""))
     (setq result (format "%s%s-%s, %d"
                          (if h-leap? "Adhika-" "")
-                         (nth h-month hindu-calendar--month-names)
+                         (hindu-calendar--convert-month h-month
+							hindu-calendar-month-type)
                          (hindu-calendar--tithi-to-paksha h-day)
-                         h-year))
+                         (hindu-calendar--convert-epoch h-year
+							hindu-calendar-epoch-type)))
     (if (called-interactively-p 'any) (insert result) result)))
 
 ;;;###autoload

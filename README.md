@@ -56,9 +56,8 @@ ELISP> (hindu-calendar-asterism 2030 6 21)
 ```
 
 `S` and `K` denote _ṡukla-pakṣa_ and _kṛṣṇa-pakṣa_ respectively. For example,
-K06 above means _kṛṣṇa-pakṣa ṣaṣṭhī_.
-
-Negative years are supported too, as per [proleptic Gregorian
+K06 above means _kṛṣṇa-pakṣa-ṣaṣṭhī_. Years are counted as elapsed Kali-yuga
+(_gatakali_). Negative years are supported too, as per [proleptic Gregorian
 calendar](https://en.wikipedia.org/wiki/Proleptic_Gregorian_calendar).
 
 The lunar calendars by default follow _amānta_ (or _amāvāsyānta_) scheme, i.e.,
@@ -67,22 +66,26 @@ non-Hindi speaking parts of India. Much of North India uses _pūrṇimānta_, i.
 months start after full-moon day. [See here for
 explanation](https://www.drikpanchang.com/faq/faq-ans8.html).
 
-## Customizations
+## Customization
 
-By default, the month names use `Chaitra`, Vaisakha, etc. Other options are:
+By default, the month names use `"Chaitra"`, Vaisakha, etc. Other options are:
 
-- `Mesha` for Mesha, Vrishabha, etc. which are zodiacal names.
-- `Madhu` for Madhu, Madhava, etc. which are old Vedic names.
-- `Kesava` for Kesava, Narayana, etc. which are the twelve names of Lord Vishnu.
-- `Dhata` for Dhātā, Aryamā, etc. which are the names of
+- `"Mesha"` for Mesha, Vrishabha, etc. which are zodiacal names.
+- `"Madhu"` for Madhu, Madhava, etc. which are ancient Vedic names.
+- `"Kesava"` for Kesava, Narayana, etc. which are the twelve names of Lord Vishnu.
+- `"Dhata"` for Dhātā, Aryamā, etc. which are the names of
    [twelve Ādityas](http://www.harekrsna.de/surya/12adityas.htm).
 
-By default, the years are counted as elapsed Kali-yuga years. Other options are:
+Customize variable `hindu-calendar-month-type` to one of the above.
 
-- `Vikrama` for Vikrama (or Bikram) samvat, whose epoch is 57 BCE.
-- `Saka` for Salivahana saka, whose epoch is 78 CE.
-- `Kali` for elapsed Kali varsha, whose epoch is 3102 BCE (i.e., -3101).
-- `Bengali` for Bengali san, whose epoch is 593 CE.
+By default, the years are counted as elapsed `"Kali"`-yuga years. Other options are:
+
+- `"Vikrama"` for Vikrama (or Bikram) samvat, whose epoch is 57 BCE.
+- `"Saka"` for Salivahana saka, whose epoch is 78 CE.
+- `"Kali"` for elapsed Kali varsha, whose epoch is 3102 BCE (i.e., -3101).
+- `"Bengali"` for Bengali san, whose epoch is 593 CE.
+
+Customize variable `hindu-calendar-epoch-type` to one of the above.
 
 ## Accuracy
 

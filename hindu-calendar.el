@@ -4,7 +4,7 @@
 
 ;; Author: B.D.Satish <bdsatish@gmail.com>
 ;; Maintainer: B.D.Satish <bdsatish@gmail.com>
-;; Version: 1.0
+;; Package-Version: 1.0
 ;; Package-Requires: ((emacs "24.3"))
 ;; Keywords: calendar, panchanga, Hindu, Indian
 ;; URL: https://github.com/bdsatish/hindu-calendar
@@ -15,48 +15,62 @@
 ;; the terms of the GNU Affero General Public License as published by the Free
 ;; Software Foundation, either version 3 of the License, or (at your option) any
 ;; later version.
-
+;;
 ;; This program is distributed in the hope that it will be useful, but WITHOUT
 ;; ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
 ;; FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License for more
 ;; details.
-
+;;
 ;; You should have received a copy of the GNU Affero General Public License
 ;; along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 ;;; Commentary:
-
+;;
 ;; This package provides traditional Hindu calendars (solar and lunar) using
-;; arithmetic based on the mean motions of Sun and Moon. It provides both
-;; tropical (sayana) and sidereal (nirayana/Lahiri) variants. It calculates
+;; arithmetic based on the mean motions of Sun and Moon.  It provides both
+;; tropical (sayana) and sidereal (nirayana/Lahiri) variants.  It calculates
 ;; tithi and nakshatra.
 
 ;;; Installation:
-
+;;
 ;; This package is available on MELPA, do `M-x package-install hindu-calendar`.
 ;; If you want to install it manually, clone this repository somewhere, add it
 ;; to `load-path`, and add `(require 'hindu-calendar)` to `.emacs`.
 
-;;; Configuration:
-
+;;; Usage:
+;;        All of the functions can be called interactively or programmatically.
+;;
 ;; Sidereal lunar (amanta): M-x hindu-calendar-sidereal-lunar
 ;; Tropical lunar (amanta): M-x hindu-calendar-tropical-lunar
 ;; Sidereal solar:          M-x hindu-calendar-sidereal-solar
 ;; Tropical solar:          M-x hindu-calendar-tropical-solar
 ;; Nakshatra (sidereal):    M-x hindu-calendar-asterism
 
+;;; Sanity:
+;; M-x package-lint-current-buffer  (after M-x reinstall-package RET package-lint)
+;; M-x checkdoc
+;; M-x byte-compile-file
+
+;;; References:
+;; 1. Length of Hindu months taken from pg. 11 of
+;;      https://www.packolkata.gov.in/INDIAN_CALADAR_PAC.pdf
+;; 2. Solar and lunar constants from pg. 20 of Rashtriya Panchang
+;;      https://www.packolkata.gov.in/rashtriya-panchang-english.php
+
 ;;; Code:
+;; Divided into two parts, backend and frontend.
 
-;;; Helper functions
-
+;;------------------------------ BACKEND CODE ----------------------------------
 ; floor(m) is exactly equivalent to Python's // operator.
 ; -14//3 = (floor -14 3) = -5
 ; int(-14/3) = (truncate -14 3) = -4
 ; (defun // (m &optional n) (floor m n))
 
+;;; Helper functions:
+
 ; Linear search in a sorted array.
 (defun hindu-calendar--linear-search-between (array x)
-  "Returns the position `i' in the sorted `ARRAY' such that a[i-1] <= x < a[i]"
+  "Return the position `i' in the sorted `ARRAY' such that a[i-1] <= X < a[i]."
   (let ((len (length array))
         (pos 0))
     (catch 'break
@@ -70,7 +84,7 @@
 ;; Gregorian and vice versa
 ; works for all dates, even negative JDN. Algo from wikipedia
 (defun hindu-calendar--gregorian-to-jdn (year month day)
-  "Converts proleptic Gregorian `YEAR', `MONTH' and `DAY' to Julian Day Number"
+  "Convert proleptic Gregorian `YEAR', `MONTH' and `DAY' to Julian Day Number."
   ; adjust for Jan and Feb as months 13 and 14 of previous year
   (let* ((year (if (<= month 2) (1- year) year))
          (month (if (<= month 2) (+ 12 month) month))
@@ -83,7 +97,7 @@
 
 ; works for all dates, even negative JDN. Algo from wikipedia
 (defun hindu-calendar--gregorian-from-jdn (jdn)
-  "Converts Julian Day Number `JDN' to proleptic Gregorian list (YEAR MONTH DAY)"
+  "Convert Julian Day Number `JDN' to proleptic Gregorian list (YEAR MONTH DAY)."
   (let* ((j (ceiling jdn))
          (k (* 3 (floor (+ (* 4 j) 274277) 146097)))
          (f (+ 1401 j -38 (floor k 4)))
@@ -96,16 +110,20 @@
     (list year month day)))
 
 ; Fixed Date = Rata Die, whose epoch is 01/Jan/1 CE proleptic Gregorian
-(defun hindu-calendar--gregorian-to-fixed (y m d) (floor (+ -1721424.5 (hindu-calendar--gregorian-to-jdn y m d))))
-(defun hindu-calendar--gregorian-from-fixed (fixed) (hindu-calendar--gregorian-from-jdn (- fixed -1721424.5)))
+(defun hindu-calendar--gregorian-to-fixed (y m d)
+  "Convert proleptic Gregorian year `Y', month `M' and date `D' to fixed."
+  (floor (+ -1721424.5 (hindu-calendar--gregorian-to-jdn y m d))))
+
+(defun hindu-calendar--gregorian-from-fixed (fixed)
+    "Convert `FIXED' date to proleptic Gregorian list (YEAR MONTH DAY)."
+    (hindu-calendar--gregorian-from-jdn (- fixed -1721424.5)))
 
 (defun hindu-calendar--fracday (hour &optional min sec)
-  "`HOUR', `MIN'utes and `SEC'onds to fraction of a day. Say 6.A.M. = 0.25 day"
+  "`HOUR', `MIN'utes and `SEC'onds to fraction of a day.  Say 6.A.M.  = 0.25 day."
   (let ((min (or min 0.0))
         (sec (or sec 0.0)))
     (+ (/ hour 24.0) (/ min 1440.0) (/ sec 86400.0))))
 
-; Taken from pg. 11 of INDIAN_CALADAR_PAC.pdf
 ; average length of a month from (sayana) Vaisakha to (sayana) Chaitra
 ; (setq mean-days '(0.0 30.4758333 30.9788888 31.3403472 31.4545833 31.2868750 30.8879861
 ;                   30.3737499 29.8851388 29.5477083 29.4434722 29.5961805 29.9714583)
@@ -125,7 +143,7 @@
     276.24171795 305.68636873 335.28372782 365.25636470))
 
 (defun hindu-calendar--solar-calendar-from-fixed (fixed tropicalp)
-  "Returns solar date (sauramana) of given R.D. date"
+  "Return solar date, tropical if `TROPICALP' else sidereal, given `FIXED' date."
   ; Tropical solar epoch is sayana Sun in 0° Ar 22/Mar/-3101 = -1132901 R.D.
   ; Sidereal (Lahiri) solar epoch is Sun in 0° Ar = 01/Feb/-3101
   (let* ((epoch (if tropicalp -1132901 -1132949))
@@ -145,10 +163,16 @@
     (list year month day)))
 
 ; wrappers for above
-(defun hindu-calendar--sidereal-solar-from-fixed (fixed) (hindu-calendar--solar-calendar-from-fixed fixed nil))
-(defun hindu-calendar--tropical-solar-from-fixed (fixed) (hindu-calendar--solar-calendar-from-fixed fixed t))
+(defun hindu-calendar--sidereal-solar-from-fixed (fixed)
+  "Return sidereal solar date (YEAR MONTH DAY), given `FIXED' date."
+  (hindu-calendar--solar-calendar-from-fixed fixed nil))
+
+(defun hindu-calendar--tropical-solar-from-fixed (fixed)
+    "Return tropical solar date (YEAR MONTH DAY), given `FIXED' date."
+    (hindu-calendar--solar-calendar-from-fixed fixed t))
 
 (defun hindu-calendar--lunar-calendar-from-fixed (fixed tropicalp)
+  "Return lunar date, tropical if `TROPICALP' else sidereal, given `FIXED' date."
   ; Sayana Caitra-S1 in Ujjain falls on Feb 20/21, -3101 19:00 proleptic Gregorian = R.D -1132930 + 19/24.
   ; Nirayana Caitra-S1 in Ujjain falls on Jan 22, -3101 proleptic Gregorian = R.D -1132960 + 12/24.
   (let* ((epoch (if tropicalp -1132930 -1132959))
@@ -171,6 +195,8 @@
 
 ; synodic-month = difference b/w consecutive new moons (by definition)
 (defun hindu-calendar--leap-month-p (new-moon tropicalp synodic-month)
+  "Check if fixed date `NEW-MOON' falls within same solar month.
+`TROPICALP' = t or nil.  `SYNODIC-MONTH' = 29.5305889 days."
   ; if new-moon (or sukla-pratipada?) of this month & next month fall
   ; within same solar month, then it is leap
   ; returns (solar-month-number, is-leap?)
@@ -181,15 +207,20 @@
 	       (+ offset (floor new-moon)) tropicalp))
          (next (hindu-calendar--solar-calendar-from-fixed
 		(+ offset (floor (+ new-moon synodic-month))) tropicalp)))
-    (list (nth 1 now) (= (nth 1 now) (nth 1 next))))) ; second element of array
+    (list (nth 1 now) (= (nth 1 now) (nth 1 next))))) ; M in (Y M D) is second element of array
 
 ; wrappers for above
-(defun hindu-calendar--sidereal-lunar-from-fixed (fixed) (hindu-calendar--lunar-calendar-from-fixed fixed nil))
-(defun hindu-calendar--tropical-lunar-from-fixed (fixed) (hindu-calendar--lunar-calendar-from-fixed fixed t))
+(defun hindu-calendar--sidereal-lunar-from-fixed (fixed)
+    "Return sidereal lunar date (YEAR MONTH LEAP-MONTH? DAY), given `FIXED' date."
+    (hindu-calendar--lunar-calendar-from-fixed fixed nil))
+
+(defun hindu-calendar--tropical-lunar-from-fixed (fixed)
+    "Return tropical lunar date (YEAR MONTH LEAP-MONTH? DAY), given `FIXED' date."
+    (hindu-calendar--lunar-calendar-from-fixed fixed t))
 
 ; Daily nakshatra as per Lahiri ayanamsha
 (defun hindu-calendar--nakshatra (fixed)
-  "Returns the lunar mansion (nakshatra) on `FIXED' date. 1= Asvini,.., 27= Revati"
+  "Return the lunar mansion (nakshatra) on `FIXED' date.  1= Asvini,.., 27= Revati."
   ; Sidereal (Lahiri) solar epoch is when Sun in 0° Ar = 01/Feb/-3101 = -1132949 R.D, Aslesha (#9)
   (let* ((epoch -1132950.375) ; 15:00 on 31/Jan/-3101 is when Ashlesha begins at Ujjain
 	 (nakshatra-month 27.3216615625) ; num. days in sidereal month (fixed star to fixed star)
@@ -199,5 +230,123 @@
 	  (+ (- fixed epoch) (hindu-calendar--fracday 6))))
     (1+ (mod (+ nak0 (floor sun nakshatra-day)) 27)))) ; nak. since epoch
 
+;;------------------------------ FRONTEND CODE ----------------------------------
+; Spelling as per the Rashtriya Panchang
+(defconst hindu-calendar--month-names
+  (list "" "Chaitra" "Vaisakha" "Jyaishtha" "Ashadha" "Sravana" "Bhadrapada"
+        "Asvina" "Kartika" "Margasirsa" "Pausha" "Magha" "Phalguna"))
+
+(defconst hindu-calendar--nakshatra-names
+  (list "" "Asvini" "Bharani" "Krittika" "Rohini" "Mrigasiras" "Ardra"
+        "Punarvasu" "Pushya" "Aslesha" "Magha" "Purvaphalguni"
+	"Uttaraphalguni" "Hasta" "Chitra" "Svati" "Visakha" "Anuradha"
+	"Jyeshtha" "Mula" "Purvashadha" "Uttarashadha" "Sravana"
+	"Dhanishta" "Satabhishaj" "Purvabhadra" "Uttarabhadra" "Revati"))
+
+(defun hindu-calendar--tithi-to-paksha (tithi)
+  "Convert given `TITHI' into krishna-paksha (K) or shukla-paksha (S)."
+  (if (> tithi 15)
+      (format "K%02d" (- tithi 15))
+      (format "S%02d" tithi)))
+
+;;;###autoload
+(defun hindu-calendar-tropical-solar (&optional year month date)
+  "Return Hindu tropical solar date of proleptic Gregorian `YEAR' `MONTH' `DATE'.
+It is equivalent to Indian National Calendar civil date used by the Indian govt."
+  (interactive)
+  (let* ((now (decode-time)); returns (ss mm hh day month year ...)
+         (year (or year (nth 5 now))) ; use (now) if val is not set
+         (month (or month (nth 4 now))) ; use (now) if val is not set
+         (date (or date (nth 3 now))) ; use (now) if val is not set
+         (rdie (hindu-calendar--gregorian-to-fixed year month date))
+         (h-date (hindu-calendar--tropical-solar-from-fixed rdie))
+         (h-year (nth 0 h-date)) ; unpack results
+         (h-month (nth 1 h-date))
+         (h-day (nth 2 h-date))
+	 (result ""))
+    (setq result (format "%s-%02d, %d"
+                         (nth h-month hindu-calendar--month-names)
+                         h-day
+                         h-year))
+    (if (called-interactively-p 'any) (insert result) result)))
+
+;;;###autoload
+(defun hindu-calendar-tropical-lunar (&optional year month date)
+  "Return Hindu tropical lunar date of proleptic Gregorian `YEAR' `MONTH' `DATE'."
+  (interactive)
+  (let* ((now (decode-time)); returns (ss mm hh day month year ...)
+         (year (or year (nth 5 now))) ; use (now) if val is not set
+         (month (or month (nth 4 now))) ; use (now) if val is not set
+         (date (or date (nth 3 now))) ; use (now) if val is not set
+         (rdie (hindu-calendar--gregorian-to-fixed year month date))
+         (hindu-date (hindu-calendar--tropical-lunar-from-fixed rdie))
+         (h-year (nth 0 hindu-date)) ; unpack results
+         (h-month (nth 1 hindu-date))
+         (h-leap? (nth 2 hindu-date))
+         (h-day (nth 3 hindu-date))
+	 (result ""))
+    (setq result (format "%s%s-%s, %d"
+                         (if h-leap? "Adhika-" "")
+                         (nth h-month hindu-calendar--month-names)
+                         (hindu-calendar--tithi-to-paksha h-day)
+                         h-year))
+    (if (called-interactively-p 'any) (insert result) result)))
+
+;;;###autoload
+(defun hindu-calendar-sidereal-solar (&optional year month date)
+  "Return sidereal/Lahiri solar date of proleptic Gregorian `YEAR' `MONTH' `DATE'."
+  (interactive)
+  (let* ((now (decode-time)); returns (ss mm hh day month year ...)
+         (year (or year (nth 5 now))) ; use (now) if val is not set
+         (month (or month (nth 4 now))) ; use (now) if val is not set
+         (date (or date (nth 3 now))) ; use (now) if val is not set
+         (rdie (hindu-calendar--gregorian-to-fixed year month date))
+         (h-date (hindu-calendar--sidereal-solar-from-fixed rdie))
+         (h-year (nth 0 h-date)) ; unpack results
+         (h-month (nth 1 h-date))
+         (h-day (nth 2 h-date))
+	 (result ""))
+    (setq result (format "%s-%02d, %d"
+                         (nth h-month hindu-calendar--month-names)
+                         h-day
+                         h-year))
+    (if (called-interactively-p 'any) (insert result) result)))
+
+;;;###autoload
+(defun hindu-calendar-sidereal-lunar (&optional year month date)
+  "Return Hindu sidereal lunar date of proleptic Gregorian `YEAR' `MONTH' `DATE'."
+  (interactive)
+  (let* ((now (decode-time)); returns (ss mm hh day month year ...)
+         (year (or year (nth 5 now))) ; use (now) if val is not set
+         (month (or month (nth 4 now))) ; use (now) if val is not set
+         (date (or date (nth 3 now))) ; use (now) if val is not set
+         (rdie (hindu-calendar--gregorian-to-fixed year month date))
+         (hindu-date (hindu-calendar--sidereal-lunar-from-fixed rdie))
+         (h-year (nth 0 hindu-date)) ; unpack results
+         (h-month (nth 1 hindu-date))
+         (h-leap? (nth 2 hindu-date))
+         (h-day (nth 3 hindu-date))
+	 (result ""))
+    (setq result (format "%s%s-%s, %d"
+                         (if h-leap? "Adhika-" "")
+                         (nth h-month hindu-calendar--month-names)
+                         (hindu-calendar--tithi-to-paksha h-day)
+                         h-year))
+    (if (called-interactively-p 'any) (insert result) result)))
+
+;;;###autoload
+(defun hindu-calendar-asterism (&optional year month date)
+  "Return sidereal lunar nakshatra on proleptic Gregorian `YEAR' `MONTH' `DATE'."
+  (interactive)
+  (let* ((now (decode-time)); returns (ss mm hh day month year ...)
+         (year (or year (nth 5 now))) ; use (now) if val is not set
+         (month (or month (nth 4 now))) ; use (now) if val is not set
+         (date (or date (nth 3 now))) ; use (now) if val is not set
+         (rdie (hindu-calendar--gregorian-to-fixed year month date))
+         (nakshatra (hindu-calendar--nakshatra rdie))
+	 (result (nth nakshatra hindu-calendar--nakshatra-names)))
+    (if (called-interactively-p 'any) (insert result) result)))
+
+;;----------------------------- PROVIDE PACKAGE ---------------------------------
 (provide 'hindu-calendar)
 ;;; hindu-calendar.el ends here

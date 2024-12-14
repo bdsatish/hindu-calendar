@@ -1,6 +1,6 @@
-;;; hindu-calendar.el --- A simplified arithmetic Hindu calendar (panchanga)  -*- lexical-binding:t -*-
+;;; hindu-calendar.el --- A simplified Hindu calendar (panchanga)  -*- lexical-binding:t -*-
 
-;; Copyright (C) 2025 B.D.Satish <bdsatish@gmail.com>
+;; Copyright (C) 2024 B.D.Satish <bdsatish@gmail.com>
 
 ;; Author: B.D.Satish <bdsatish@gmail.com>
 ;; Maintainer: B.D.Satish <bdsatish@gmail.com>
@@ -27,7 +27,7 @@
 ;;; Commentary:
 ;;
 ;; This package provides traditional Hindu calendars (solar and lunar) using
-;; arithmetic based on the mean motions of Sun and Moon.  It provides both
+;; arithmetic based on the mean motions of the Sun and Moon.  It provides both
 ;; tropical (sayana) and sidereal (nirayana/Lahiri) variants.  It calculates
 ;; tithi and nakshatra.
 
@@ -54,13 +54,14 @@
 ;;; References:
 ;; 1. Length of Hindu months taken from pg. 11 of
 ;;      https://www.packolkata.gov.in/INDIAN_CALADAR_PAC.pdf
-;; 2. Solar and lunar constants from pg. 20 of Rashtriya Panchang
-;;      https://www.packolkata.gov.in/rashtriya-panchang-english.php
+;; 2. Solar and lunar constants from pg. 9 of Indian Astronomical Ephemeris:
+;;      https://www.packolkata.gov.in/indian-astronomical-ephemeris.php
 
 ;;; Code:
 ;; Divided into two parts, backend and frontend.
 
 ;;------------------------------ BACKEND CODE ----------------------------------
+
 ; floor(m) is exactly equivalent to Python's // operator.
 ; -14//3 = (floor -14 3) = -5
 ; int(-14/3) = (truncate -14 3) = -4
@@ -90,8 +91,8 @@
          (month (if (<= month 2) (+ 12 month) month))
          (a (floor year 100))
          (b (+ (- 2 a) (floor a 4)))
-         (c (floor (* 365.25 (+ year 4716)))) ; same as floor(...)
-         (d (floor (* 30.6001 (1+ month))))   ; same as floor(...)
+         (c (floor (* 365.25 (+ year 4716))))
+         (d (floor (* 30.6001 (1+ month))))
          (jdn (+ b c d day -1524.5)))
     jdn))
 
@@ -231,6 +232,7 @@
     (1+ (mod (+ nak0 (floor sun nakshatra-day)) 27)))) ; nak. since epoch
 
 ;;------------------------------ FRONTEND CODE ----------------------------------
+
 ; Spelling as per the Rashtriya Panchang
 (defconst hindu-calendar--month-names
   (list "" "Chaitra" "Vaisakha" "Jyaishtha" "Ashadha" "Sravana" "Bhadrapada"

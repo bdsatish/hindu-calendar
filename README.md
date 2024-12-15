@@ -9,7 +9,7 @@ calculates tithi and nakshatra as well.
 
 ## Installation
 
-This package is available on MELPA, do `M-x package-install hindu-calendar`.
+This package is available on MELPA, do `M-x package-install RET hindu-calendar`.
 If you want to install it manually (example):
 
 ```shell

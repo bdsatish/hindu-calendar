@@ -30,15 +30,9 @@
 ;; arithmetic based on the mean motions of the Sun and Moon.  It provides both
 ;; tropical (sayana) and sidereal (nirayana/Lahiri) variants.  It calculates
 ;; tithi and nakshatra.
-
-;;; Installation:
 ;;
-;; This package is available on MELPA, do `M-x package-install hindu-calendar`.
-;; If you want to install it manually, clone this repository somewhere, add it
-;; to `load-path`, and add `(require 'hindu-calendar)` to `.emacs`.
-
-;;; Usage:
-;;        All of the functions can be called interactively or programmatically.
+;; Usage:
+;;     All of the functions can be called interactively or programmatically.
 ;;
 ;; Sidereal lunar (amanta): M-x hindu-calendar-sidereal-lunar
 ;; Tropical lunar (amanta): M-x hindu-calendar-tropical-lunar
@@ -46,7 +40,13 @@
 ;; Tropical solar:          M-x hindu-calendar-tropical-solar
 ;; Nakshatra (sidereal):    M-x hindu-calendar-asterism
 ;;
-;; See README.md for more instructions.
+;; See README.md for more instructions and customizations.
+
+;;; Installation:
+;;
+;; This package is found on MELPA, do `M-x package-install RET hindu-calendar`.
+;; If you want to install it manually, clone this repository somewhere, add it
+;; to `load-path`, and add `(require 'hindu-calendar)` to `.emacs`.
 
 ;;; Sanity:
 ;; M-x package-lint-current-buffer  (after M-x reinstall-package RET package-lint)
@@ -73,7 +73,7 @@
 
 ; Linear search in a sorted array.
 (defun hindu-calendar--linear-search-between (array x)
-  "Return the position `i' in the sorted `ARRAY' such that a[i-1] <= X < a[i]."
+  "Return the position `i' in the sorted `ARRAY' such that a[i-1] <= `X' < a[i]."
   (let ((len (length array))
         (pos 0))
     (catch 'break
@@ -293,29 +293,32 @@
 ;; Conversion functions for epochs. `checkdoc' does not complain about `fset'.
 ; (fset 'hindu-calendar--vikrama (lambda (kali) (- kali 3044)))
 
-(defun hindu-calendar--convert-epoch (year epoch-type)
-  "Convert Kali-yuga elapsed `YEAR' into `EPOCH-TYPE' (Saka, Vikrama,...)."
+(defun hindu-calendar--convert-epoch (year)
+  "Convert Kali-yuga elapsed `YEAR' into epoch type (Saka, Vikrama,...)."
   (cond
-   ((string= (downcase epoch-type) "vikrama")
+   ((string= "vikrama" (downcase hindu-calendar-epoch-type))
     (- year 3044))
-   ((string= (downcase epoch-type) "saka")
+   ((string=  "saka" (downcase hindu-calendar-epoch-type))
     (- year 3179))
-   ((string= (downcase epoch-type) "bengali")
+   ((string= "bengali" (downcase hindu-calendar-epoch-type))
     (- year 3694))
    (t year))) ; default is Kali Year itself
 
-(defun hindu-calendar--convert-month (month month-type)
-  "Convert `MONTH' number into name of `MONTH-TYPE' (Chaitra, Mesha,...)."
+(defun hindu-calendar--convert-month (month leap-month-p)
+  "Convert `MONTH' number to string, accounting for `LEAP-MONTH-P'."
   (cond
-   ((string= (downcase month-type) "mesha")
+   ((string= (downcase hindu-calendar-month-type) "mesha")
     (nth month hindu-calendar--mesha-months))
-   ((string= (downcase month-type) "madhu")
-    (nth month hindu-calendar--madhu-months))
-   ((string= (downcase month-type) "kesava")
-    (nth month hindu-calendar--kesava-months))
-   ((string= (downcase month-type) "dhata")
+   ((string= (downcase hindu-calendar-month-type) "madhu")
+    (if leap-month-p "Amhaspati" (nth month hindu-calendar--madhu-months)))
+   ((string= (downcase hindu-calendar-month-type) "kesava")
+    (if leap-month-p "Purushottama" (nth month hindu-calendar--kesava-months)))
+   ((string= (downcase hindu-calendar-month-type) "dhata")
     (nth month hindu-calendar--dhata-months))
-   (t (nth month hindu-calendar--chaitra-months)))) ; default is Chaitra-type
+   (t
+    (if leap-month-p
+	(concat "Adhika-" (nth month hindu-calendar--chaitra-months))
+	(nth month hindu-calendar--chaitra-months))))) ; default is Chaitra-type
 
 ;;;###autoload
 (defun hindu-calendar-tropical-solar (&optional year month date)
@@ -333,11 +336,9 @@ It is equivalent to Indian National Calendar civil date used by the Indian govt.
          (h-day (nth 2 h-date))
 	 (result ""))
     (setq result (format "%s-%02d, %d"
-                         (hindu-calendar--convert-month h-month
-							hindu-calendar-month-type)
+                         (hindu-calendar--convert-month h-month nil)
                          h-day
-                         (hindu-calendar--convert-epoch h-year
-							hindu-calendar-epoch-type)))
+                         (hindu-calendar--convert-epoch h-year)))
     (if (called-interactively-p 'any) (insert result) result)))
 
 ;;;###autoload
@@ -355,13 +356,10 @@ It is equivalent to Indian National Calendar civil date used by the Indian govt.
          (h-leap? (nth 2 hindu-date))
          (h-day (nth 3 hindu-date))
 	 (result ""))
-    (setq result (format "%s%s-%s, %d"
-                         (if h-leap? "Adhika-" "")
-                         (hindu-calendar--convert-month h-month
-							hindu-calendar-month-type)
+    (setq result (format "%s-%s, %d"
+                         (hindu-calendar--convert-month h-month h-leap?)
                          (hindu-calendar--tithi-to-paksha h-day)
-                         (hindu-calendar--convert-epoch h-year
-							hindu-calendar-epoch-type)))
+                         (hindu-calendar--convert-epoch h-year)))
     (if (called-interactively-p 'any) (insert result) result)))
 
 ;;;###autoload
@@ -379,11 +377,9 @@ It is equivalent to Indian National Calendar civil date used by the Indian govt.
          (h-day (nth 2 h-date))
 	 (result ""))
     (setq result (format "%s-%02d, %d"
-                         (hindu-calendar--convert-month h-month
-							hindu-calendar-month-type)
+                         (hindu-calendar--convert-month h-month nil)
                          h-day
-                         (hindu-calendar--convert-epoch h-year
-							hindu-calendar-epoch-type)))
+                         (hindu-calendar--convert-epoch h-year)))
     (if (called-interactively-p 'any) (insert result) result)))
 
 ;;;###autoload
@@ -401,13 +397,10 @@ It is equivalent to Indian National Calendar civil date used by the Indian govt.
          (h-leap? (nth 2 hindu-date))
          (h-day (nth 3 hindu-date))
 	 (result ""))
-    (setq result (format "%s%s-%s, %d"
-                         (if h-leap? "Adhika-" "")
-                         (hindu-calendar--convert-month h-month
-							hindu-calendar-month-type)
+    (setq result (format "%s-%s, %d"
+                         (hindu-calendar--convert-month h-month h-leap?)
                          (hindu-calendar--tithi-to-paksha h-day)
-                         (hindu-calendar--convert-epoch h-year
-							hindu-calendar-epoch-type)))
+                         (hindu-calendar--convert-epoch h-year)))
     (if (called-interactively-p 'any) (insert result) result)))
 
 ;;;###autoload

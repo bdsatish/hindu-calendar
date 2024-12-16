@@ -112,7 +112,12 @@ enough.
 
 It is also integrated with Emacs' calendar. Type `M-x calendar` to open-up 3-month
 calendar view. Move cursor (point) over any date you want. Type `p H` (uppercase H)
-to display Hindu calendar in the echo area.
+to display Hindu calendar in the echo area. Here's an example with settings for
+someone in Mathura or Varanasi:
+
+[Sample screenshot](screenshot.jpg):
+
+![Sample screenshot](screenshot.png "Hindu Panchanga")
 
 ## Accuracy
 

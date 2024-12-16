@@ -62,6 +62,8 @@
 ;;; Code:
 ;; Divided into two parts, backend and frontend.
 
+(require 'calendar) ; only for (hindu-calendar--print-to-echo)
+
 ;;------------------------------ BACKEND CODE ----------------------------------
 
 ; floor(m) is exactly equivalent to Python's // operator.
@@ -326,6 +328,20 @@
     (if leap-month-p
 	(concat "Adhika-" (nth month hindu-calendar--chaitra-months))
 	(nth month hindu-calendar--chaitra-months))))) ; default is Chaitra-type
+
+(defun hindu-calendar--print-to-echo ()
+  "Print Hindu sidereal dates to echo area."
+  (interactive)
+  (let* ((date (calendar-cursor-to-date))
+         (day (nth 1 date))
+         (month (nth 0 date))
+         (year (nth 2 date)))
+    (message "Hindu date: Lunar %s nakshatra %s; Solar %s"
+	    (hindu-calendar-asterism year month day)
+	    (hindu-calendar-sidereal-lunar year month day)
+	    (hindu-calendar-sidereal-solar year month day))))
+
+(define-key calendar-mode-map (kbd "p H") 'hindu-calendar--print-to-echo)
 
 ;;;###autoload
 (defun hindu-calendar-tropical-solar (&optional year month date)

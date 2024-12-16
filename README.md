@@ -3,9 +3,9 @@
 A simplified arithmetical Hindu calendar (panchanga) for Emacs.
 
 This package provides traditional Hindu calendars (solar and lunar) using
-arithmetic based on the _mean_ motions of the Sun and Moon. It provides both
-tropical (sāyana) and sidereal (nirayana/Lahiri ayanāmsa) variants. It
-calculates tithi and nakshatra as well.
+arithmetic based on the _mean_ motions of the Sun and Moon. It calculates tithi
+and nakshatra. It provides both tropical (sāyana) and sidereal (nirayana/Lahiri
+ayanāmsa) variants. Lunar calendars can be chosen between amānta or purnimānta.
 
 ## Installation
 
@@ -30,8 +30,8 @@ All of the functions can be called interactively or programmatically.
 
 | Calendar type           | Function/command                  |
 |-------------------------|-----------------------------------|
-| Sidereal lunar (amānta) | M-x hindu-calendar-sidereal-lunar |
-| Tropical lunar (amānta) | M-x hindu-calendar-tropical-lunar |
+| Sidereal lunar          | M-x hindu-calendar-sidereal-lunar |
+| Tropical lunar          | M-x hindu-calendar-tropical-lunar |
 | Sidereal solar          | M-x hindu-calendar-sidereal-solar |
 | Tropical solar          | M-x hindu-calendar-tropical-solar |
 | Nakshatra (sidereal)    | M-x hindu-calendar-asterism       |
@@ -61,9 +61,9 @@ K06 above means _kṛṣṇa-pakṣa-ṣaṣṭhī_. Years are counted as elapse
 calendar](https://en.wikipedia.org/wiki/Proleptic_Gregorian_calendar).
 
 The lunar calendars by default follow _amānta_ (or _amāvāsyānta_) scheme, i.e.,
-a new month starts after new-moon day. This is the scheme used mostly in the
+a month ends on new-moon day. This is the scheme used mostly in the
 non-Hindi speaking parts of India. Much of North India uses _pūrṇimānta_, i.e.,
-months start after full-moon day. [See here for
+a month ends on full-moon day. [See here for
 explanation](https://www.drikpanchang.com/faq/faq-ans8.html).
 
 ## Customization
@@ -87,6 +87,9 @@ By default, the years are counted as elapsed `"Kali"`-yuga years. Other options 
 - `"Bengali"` for Bengali san, whose epoch is 593 CE.
 
 Customize variable `hindu-calendar-epoch-type` to one of the above.
+
+By default, `"amanta"` new-moon based lunar calendar is used. Customize variable
+`hindu-calendar-lunar-type` to `"purnimanta"` for full-moon based reckoning.
 
 Here are some typical combinations:
 
@@ -132,7 +135,11 @@ sunrise timings. The Python program
 [drik-panchanga](https://github.com/bdsatish/drik-panchanga) is astronomical
 and thus gives best accuracy.
 
-## License
+## Bugs
+
+Yes, many. Please [report a new issue](https://github.com/bdsatish/hindu-calendar/issues).
+
+## Licence
 
 Copyright (C) B.D.Satish. GNU Affero GPL v3 (or later).
 

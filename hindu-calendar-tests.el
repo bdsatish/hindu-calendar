@@ -8,7 +8,10 @@
 
 (defun hindu-calendar-tests ()
   (require 'cl-lib)
-  (let (; in 285/286 .C.E. both tropical and sidereal zodiacs overlap on vernel equinox
+  (let ((hindu-calendar-epoch-type "kali") ; reset to default values
+	(hindu-calendar-month-type "chaitra")
+	(hindu-calendar-lunar-type "amanta")
+        ; in 285/286 .C.E. both tropical and sidereal zodiacs overlap on vernel equinox
         (zero-point-solar (to-fixed +285 3 21))
         (zero-point-lunar (to-fixed +286 3 21))
        )
@@ -127,13 +130,33 @@
       (cl-assert (string= "Purushottama-S03, 5126" (hindu-calendar-tropical-lunar 2025 8 26)))
     )
 
-    ; default is Chaitra-based months
+    ; default is Chaitra-based months, adhika-masa occurs before nija-masa
+    (cl-assert (string= "Vaisakha-K15, 5127" (hindu-calendar-sidereal-lunar 2026 5 16)))
+    (cl-assert (string= "Adhika-Jyaishtha-S03, 5127" (hindu-calendar-sidereal-lunar 2026 5 19)))
     (cl-assert (string= "Adhika-Jyaishtha-K09, 5127" (hindu-calendar-sidereal-lunar 2026 6 9)))
+    (cl-assert (string= "Jyaishtha-S11, 5127" (hindu-calendar-sidereal-lunar 2026 6 25)))
+    (cl-assert (string= "Jyaishtha-K01, 5127" (hindu-calendar-sidereal-lunar 2026 6 30)))
+
     (cl-assert (string= "Adhika-Asvina-S03, 5126" (hindu-calendar-tropical-lunar 2025 8 26)))
 
     ; solar calendars must not be affected by leap-month setting
     (cl-assert (string= "Kartika-29, 5125" (hindu-calendar-sidereal-solar 2024 12 15)))
     (cl-assert (string= "Margasirsa-24, 5125" (hindu-calendar-tropical-solar 2024 12 15)))
+
+    ; Purnimanta calendars. New year begins on Chaitra-S01 here also.
+    (let ((hindu-calendar-lunar-type "purnimanta"))
+      (cl-assert (string= "Phalguna-K11, 5124" (hindu-calendar-sidereal-lunar 2024 3 6)))
+      (cl-assert (string= "Phalguna-S03, 5124" (hindu-calendar-sidereal-lunar 2024 3 13)))
+      (cl-assert (string= "Chaitra-K13, 5124" (hindu-calendar-sidereal-lunar 2024 4 6))) ; year doesn't change
+      (cl-assert (string= "Chaitra-S05, 5125" (hindu-calendar-sidereal-lunar 2024 4 13))) ; year changes
+
+      ; with adhika masa sandwich'd between nija-jyestha
+      (cl-assert (string= "Jyaishtha-K15, 5127" (hindu-calendar-sidereal-lunar 2026 5 16)))
+      (cl-assert (string= "Adhika-Jyaishtha-S03, 5127" (hindu-calendar-sidereal-lunar 2026 5 19)))
+      (cl-assert (string= "Adhika-Jyaishtha-K09, 5127" (hindu-calendar-sidereal-lunar 2026 6 9)))
+      (cl-assert (string= "Jyaishtha-S11, 5127" (hindu-calendar-sidereal-lunar 2026 6 25)))
+      (cl-assert (string= "Ashadha-K01, 5127" (hindu-calendar-sidereal-lunar 2026 6 30)))
+    )
 
     (cl-assert (string= "Satabhishaj" (hindu-calendar-asterism 2030 6 21)))
 ) ; end-defun

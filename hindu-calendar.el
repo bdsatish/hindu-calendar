@@ -87,6 +87,11 @@
     pos))
 
 ;; Gregorian and vice versa
+; 'absolute' => 'fixed' date, i.e. R.D. 'astro' implied JDN.
+; NOTE: Have to write my own functions because built-in are buggy for negative years!
+; ELISP> (calendar-gregorian-from-absolute
+;        (calendar-absolute-from-gregorian (list 12 16 -2024)))
+;  (1 -16 -2022) ; expected (12 16 -2024)
 ; works for all dates, even negative JDN. Algo from wikipedia
 (defun hindu-calendar--gregorian-to-jdn (year month day)
   "Convert proleptic Gregorian `YEAR', `MONTH' and `DAY' to Julian Day Number."
@@ -191,12 +196,14 @@
          (leap-mon (hindu-calendar--leap-month-p
 		    (+ new-moon epoch) tropicalp synodic-month))
          (month (1+ (% (nth 0 leap-mon) 12))) ; next solar month
-         (leap (nth 1 leap-mon))
+         (leap? (nth 1 leap-mon))
          (day ; tithis since beginning of lunar month
           (1+ (mod (floor sun lunar-day) 30)))
          (year ; solar year at end of lunar month(s)
           (floor new-moon len-year))) ; new year begins on epoch
-    (list year month leap day)))
+    (if (string= "purnimanta" (downcase hindu-calendar-lunar-type))
+        (hindu-calendar--convert-to-purnimanta year month leap? day)
+      (list year month leap? day)))) ; default is amanta
 
 ; synodic-month = difference b/w consecutive new moons (by definition)
 (defun hindu-calendar--leap-month-p (new-moon tropicalp synodic-month)
@@ -213,6 +220,12 @@
          (next (hindu-calendar--solar-calendar-from-fixed
 		(+ offset (floor (+ new-moon synodic-month))) tropicalp)))
     (list (nth 1 now) (= (nth 1 now) (nth 1 next))))) ; M in (Y M D) is second element of array
+
+(defun hindu-calendar--convert-to-purnimanta (year month leap? day)
+  "Convert given amanta date (`YEAR' `MONTH' `LEAP?' `DAY') to purnimanta."
+  (if (and (> day 15) (not leap?)) ; bump month only for krishna paksha
+      (list year (1+ (mod month 12)) leap? day)
+    (list year month leap? day)))
 
 ; wrappers for above
 (defun hindu-calendar--sidereal-lunar-from-fixed (fixed)
@@ -257,6 +270,12 @@
                  (const :tag "Vikrama samvat" "Vikrama")
                  (const :tag "Salivahana saka" "Saka")
                  (const :tag "Bengali san" "Bengali"))
+  :group 'hindu-calendar-group)
+
+(defcustom hindu-calendar-lunar-type "Amanta"
+  "Type of lunar calendar: purnimanta for full-moon, amanta for new-moon."
+  :type '(choice (const :tag "Month ends on a new-moon day" "Amanta")
+                 (const :tag "Month ends on a full-moon day" "Purnimanta"))
   :group 'hindu-calendar-group)
 
 ; Spelling as per the Rashtriya Panchang

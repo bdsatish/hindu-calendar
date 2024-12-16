@@ -245,6 +245,7 @@
                  (const :tag "Mesha, Vrishabha,..." "Mesha")
                  (const :tag "Madhu, Madhava,..." "Madhu")
                  (const :tag "Dhata, Aryaman,..." "Dhata")
+                 (const :tag "Baisakha, Jyestha,..." "Baisakha")
 		 (const :tag "Kesava, Narayana,..." "Kesava"))
   :group 'hindu-calendar-group)
 
@@ -276,6 +277,10 @@
 (defconst hindu-calendar--dhata-months
   (list "" "Dhata" "Aryama" "Mitra" "Varuna" "Indra" "Vivasvan"
 	"Tvashta" "Vishnu" "Amsuman" "Bhaga" "Pusha" "Parjanya"))
+
+(defconst hindu-calendar--baisakha-months
+  (list "" "Baisakha" "Jyestha" "Asadha" "Srabana" "Bhadra" "Asvina"
+	"Kartika" "Margasira" "Pousha" "Magha" "Phalguna" "Chaitra"))
 
 (defconst hindu-calendar--nakshatra-names
   (list "" "Asvini" "Bharani" "Krittika" "Rohini" "Mrigasiras" "Ardra"
@@ -315,6 +320,8 @@
     (if leap-month-p "Purushottama" (nth month hindu-calendar--kesava-months)))
    ((string= (downcase hindu-calendar-month-type) "dhata")
     (nth month hindu-calendar--dhata-months))
+   ((string= (downcase hindu-calendar-month-type) "baisakha")
+    (nth month hindu-calendar--baisakha-months))
    (t
     (if leap-month-p
 	(concat "Adhika-" (nth month hindu-calendar--chaitra-months))

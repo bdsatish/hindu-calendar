@@ -75,6 +75,7 @@ By default, the month names use `"Chaitra"`, Vaisakha, etc. Other options are:
 - `"Kesava"` for Kesava, Narayana, etc. which are the twelve names of Lord Vishnu.
 - `"Dhata"` for Dhātā, Aryamā, etc. which are the names of
    [twelve Ādityas](http://www.harekrsna.de/surya/12adityas.htm).
+- `"Baisakha"` as first month of new solar year, as in Bengal, Assam, Odisha, etc.
 
 Customize variable `hindu-calendar-month-type` to one of the above.
 
@@ -86,6 +87,29 @@ By default, the years are counted as elapsed `"Kali"`-yuga years. Other options 
 - `"Bengali"` for Bengali san, whose epoch is 593 CE.
 
 Customize variable `hindu-calendar-epoch-type` to one of the above.
+
+Here are some typical combinations:
+
+| Category                   | `hindu-calendar-` | `hindu-calendar-month-type` | `hindu-calendar-epoch-type` |
+|:---------------------------|-------------------|-----------------------------|-----------------------------|
+| Indian national calendar   | tropical-solar    | chaitra                     | saka                        |
+| Kannadiga, Marathi, Telugu | sidereal-lunar    | chaitra                     | saka                        |
+| Gujarati                   | sidereal-lunar    | chaitra                     | vikrama                     |
+| Tamizhan                   | sidereal-solar    | chaitra                     | saka, kali                  |
+| Malayali                   | sidereal-solar    | mesha                       | kollam                      |
+| Bengali                    | sidereal-solar    | baisakha                    | bengali                     |
+| Odia                       | sidereal-solar    | baisakha                    | bengali, vilayati           |
+| Nepali, Punjabi            | sidereal-solar    | baisakha                    | vikrama                     |
+| Rest of India (purnimanta) | sidereal-lunar    | chaitra                     | vikrama                     |
+| Vedic (Taittiriya)	     | tropical-lunar    | madhu                       | N/A                         |
+
+Of course, each language has its own names for the months (e.g., Agraha(ya)n,
+Margazhi, etc. for Margasirsa) but it is hoped that the above is indicative
+enough.
+
+It is also integrated with Emacs' calendar. Type `M-x calendar` to open-up 3-month
+calendar view. Move cursor (point) over any date you want. Type `p H` (uppercase H)
+to display Hindu calendar in the echo area.
 
 ## Accuracy
 

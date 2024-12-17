@@ -1,4 +1,7 @@
 ;;;;;;;;;;;;;;;;;; TESTS ;;;;;;;;;;;;;;;;;
+(require 'cl-lib)
+(require 'hindu-calendar)
+
 (defmacro assert-lists-equal (l1 l2)
     `(cl-assert (not (cl-set-difference ,l1 ,l2)))
 )
@@ -7,7 +10,6 @@
 (defalias 'from-fixed 'hindu-calendar--gregorian-from-fixed)
 
 (defun hindu-calendar-tests ()
-  (require 'cl-lib)
   (let ((hindu-calendar-epoch-type "kali") ; reset to default values
 	(hindu-calendar-month-type "chaitra")
 	(hindu-calendar-lunar-type "amanta")

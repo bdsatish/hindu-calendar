@@ -27,18 +27,20 @@
 ;;; Commentary:
 ;;
 ;; This package provides traditional Hindu calendars (solar and lunar) using
-;; arithmetic based on the mean motions of the Sun and Moon.  It provides both
-;; tropical (sayana) and sidereal (nirayana/Lahiri) variants.  It calculates
-;; tithi and nakshatra.
+;; arithmetic based on the mean motions of the Sun and Moon.  It calculates
+;; tithi and nakshatra.  It provides both tropical (sayana) and sidereal
+;; (nirayana/Lahiri) variants.  Lunar calendar can be chosen between amanta
+;; or purnimanta.
 ;;
 ;; Usage:
 ;;     All of the functions can be called interactively or programmatically.
 ;;
-;; Sidereal lunar (amanta): M-x hindu-calendar-sidereal-lunar
-;; Tropical lunar (amanta): M-x hindu-calendar-tropical-lunar
+;; Sidereal lunar:          M-x hindu-calendar-sidereal-lunar
+;; Tropical lunar:          M-x hindu-calendar-tropical-lunar
 ;; Sidereal solar:          M-x hindu-calendar-sidereal-solar
 ;; Tropical solar:          M-x hindu-calendar-tropical-solar
 ;; Nakshatra (sidereal):    M-x hindu-calendar-asterism
+;; Personal customization:  M-x customize-group RET hindu-calendar-group
 ;;
 ;; See README.md for more instructions and customizations.
 
@@ -63,6 +65,216 @@
 ;; Divided into two parts, backend and frontend.
 
 (require 'calendar) ; only for (hindu-calendar--print-to-echo)
+
+;;------------------------------ FRONTEND CODE ----------------------------------
+
+(defgroup hindu-calendar-group nil
+  "Settings for Hindu calendar."
+  :group 'calendar)
+
+(defcustom hindu-calendar-month-type "Chaitra"
+  "Type of month names.  One of Chaitra, Mesha, Madhu, Kesava, or Dhata."
+  :type '(choice (const :tag "Chaitra, Vaisakha,..." "Chaitra")
+                 (const :tag "Mesha, Vrishabha,..." "Mesha")
+                 (const :tag "Madhu, Madhava,..." "Madhu")
+                 (const :tag "Dhata, Aryaman,..." "Dhata")
+                 (const :tag "Baisakha, Jyestha,..." "Baisakha")
+		 (const :tag "Kesava, Narayana,..." "Kesava"))
+  :group 'hindu-calendar-group)
+
+(defcustom hindu-calendar-epoch-type "Kali"
+  "Type of epoch to reckon years.  One of Kali, Vikrama, Saka, or Bengali."
+  :type '(choice (const :tag "Kali Yuga (elapsed)" "Kali")
+                 (const :tag "Vikrama samvat" "Vikrama")
+                 (const :tag "Salivahana saka" "Saka")
+                 (const :tag "Bengali san" "Bengali"))
+  :group 'hindu-calendar-group)
+
+(defcustom hindu-calendar-lunar-type "Amanta"
+  "Type of lunar calendar: purnimanta for full-moon, amanta for new-moon."
+  :type '(choice (const :tag "Amanta, month ends on a new-moon day" "Amanta")
+                 (const :tag "Purnimanta, month ends on a full-moon day" "Purnimanta"))
+  :group 'hindu-calendar-group)
+
+; Spelling as per the Rashtriya Panchang
+(defconst hindu-calendar--chaitra-months
+  (list "" "Chaitra" "Vaisakha" "Jyaishtha" "Ashadha" "Sravana" "Bhadrapada"
+        "Asvina" "Kartika" "Margasirsa" "Pausha" "Magha" "Phalguna"))
+
+(defconst hindu-calendar--mesha-months
+  (list "" "Mesha" "Vrishabha" "Mithuna" "Karkata" "Simha" "Kanya"
+	"Tula" "Vrischika" "Dhanus" "Makara" "Kumbha" "Mina"))
+
+(defconst hindu-calendar--madhu-months
+  (list "" "Madhu" "Madhava" "Sukra" "Suchi" "Nabhas" "Nabhasya"
+	"Isha" "Urja" "Sahas" "Sahasya" "Tapas" "Tapasya"))
+
+(defconst hindu-calendar--kesava-months
+  (list "" "Vishnu" "Madhusudana" "Trivikrama" "Vamana" "Sridhara" "Hrishikesa"
+	"Padmanabha" "Damodara" "Kesava" "Narayana" "Madhava" "Govinda"))
+
+(defconst hindu-calendar--dhata-months
+  (list "" "Dhata" "Aryama" "Mitra" "Varuna" "Indra" "Vivasvan"
+	"Tvashta" "Vishnu" "Amsuman" "Bhaga" "Pusha" "Parjanya"))
+
+(defconst hindu-calendar--baisakha-months
+  (list "" "Baisakha" "Jyestha" "Asadha" "Srabana" "Bhadra" "Asvina"
+	"Kartika" "Margasira" "Pousha" "Magha" "Phalguna" "Chaitra"))
+
+(defconst hindu-calendar--nakshatra-names
+  (list "" "Asvini" "Bharani" "Krittika" "Rohini" "Mrigasiras" "Ardra"
+        "Punarvasu" "Pushya" "Aslesha" "Magha" "Purvaphalguni"
+	"Uttaraphalguni" "Hasta" "Chitra" "Svati" "Visakha" "Anuradha"
+	"Jyeshtha" "Mula" "Purvashadha" "Uttarashadha" "Sravana"
+	"Dhanishta" "Satabhishaj" "Purvabhadra" "Uttarabhadra" "Revati"))
+
+(defun hindu-calendar--tithi-to-paksha (tithi)
+  "Convert given `TITHI' into krishna-paksha (K) or shukla-paksha (S)."
+  (if (> tithi 15)
+      (format "K%02d" (- tithi 15))
+      (format "S%02d" tithi)))
+
+;; Conversion functions for epochs. `checkdoc' does not complain about `fset'.
+; (fset 'hindu-calendar--vikrama (lambda (kali) (- kali 3044)))
+
+(defun hindu-calendar--convert-epoch (year)
+  "Convert Kali-yuga elapsed `YEAR' into epoch type (Saka, Vikrama,...)."
+  (cond
+   ((string= "vikrama" (downcase hindu-calendar-epoch-type))
+    (- year 3044))
+   ((string=  "saka" (downcase hindu-calendar-epoch-type))
+    (- year 3179))
+   ((string= "bengali" (downcase hindu-calendar-epoch-type))
+    (- year 3694))
+   (t year))) ; default is Kali Year itself
+
+(defun hindu-calendar--convert-month (month leap-month-p)
+  "Convert `MONTH' number to string, accounting for `LEAP-MONTH-P'."
+  (cond
+   ((string= (downcase hindu-calendar-month-type) "mesha")
+    (nth month hindu-calendar--mesha-months))
+   ((string= (downcase hindu-calendar-month-type) "madhu")
+    (if leap-month-p "Amhaspati" (nth month hindu-calendar--madhu-months)))
+   ((string= (downcase hindu-calendar-month-type) "kesava")
+    (if leap-month-p "Purushottama" (nth month hindu-calendar--kesava-months)))
+   ((string= (downcase hindu-calendar-month-type) "dhata")
+    (nth month hindu-calendar--dhata-months))
+   ((string= (downcase hindu-calendar-month-type) "baisakha")
+    (nth month hindu-calendar--baisakha-months))
+   (t
+    (if leap-month-p
+	(concat "Adhika-" (nth month hindu-calendar--chaitra-months))
+	(nth month hindu-calendar--chaitra-months))))) ; default is Chaitra-type
+
+(defun hindu-calendar--print-to-echo ()
+  "Print Hindu sidereal dates to echo area."
+  (interactive)
+  (let* ((date (calendar-cursor-to-date))
+         (day (nth 1 date))
+         (month (nth 0 date))
+         (year (nth 2 date)))
+    (message "Hindu date: Lunar %s nakshatra %s; Solar %s"
+	    (hindu-calendar-asterism year month day)
+	    (hindu-calendar-sidereal-lunar year month day)
+	    (hindu-calendar-sidereal-solar year month day))))
+
+(define-key calendar-mode-map (kbd "p H") 'hindu-calendar--print-to-echo)
+
+;;;###autoload
+(defun hindu-calendar-tropical-solar (&optional year month date)
+  "Return Hindu tropical solar date of proleptic Gregorian `YEAR' `MONTH' `DATE'.
+It is equivalent to Indian National Calendar civil date used by the Indian govt."
+  (interactive)
+  (let* ((now (decode-time)); returns (ss mm hh day month year ...)
+         (year (or year (nth 5 now))) ; use (now) if val is not set
+         (month (or month (nth 4 now))) ; use (now) if val is not set
+         (date (or date (nth 3 now))) ; use (now) if val is not set
+         (rdie (hindu-calendar--gregorian-to-fixed year month date))
+         (h-date (hindu-calendar--tropical-solar-from-fixed rdie))
+         (h-year (nth 0 h-date)) ; unpack results
+         (h-month (nth 1 h-date))
+         (h-day (nth 2 h-date))
+	 (result ""))
+    (setq result (format "%s-%02d, %d"
+                         (hindu-calendar--convert-month h-month nil)
+                         h-day
+                         (hindu-calendar--convert-epoch h-year)))
+    (if (called-interactively-p 'any) (insert result) result)))
+
+;;;###autoload
+(defun hindu-calendar-tropical-lunar (&optional year month date)
+  "Return Hindu tropical lunar date of proleptic Gregorian `YEAR' `MONTH' `DATE'."
+  (interactive)
+  (let* ((now (decode-time)); returns (ss mm hh day month year ...)
+         (year (or year (nth 5 now))) ; use (now) if val is not set
+         (month (or month (nth 4 now))) ; use (now) if val is not set
+         (date (or date (nth 3 now))) ; use (now) if val is not set
+         (rdie (hindu-calendar--gregorian-to-fixed year month date))
+         (hindu-date (hindu-calendar--tropical-lunar-from-fixed rdie))
+         (h-year (nth 0 hindu-date)) ; unpack results
+         (h-month (nth 1 hindu-date))
+         (h-leap? (nth 2 hindu-date))
+         (h-day (nth 3 hindu-date))
+	 (result ""))
+    (setq result (format "%s-%s, %d"
+                         (hindu-calendar--convert-month h-month h-leap?)
+                         (hindu-calendar--tithi-to-paksha h-day)
+                         (hindu-calendar--convert-epoch h-year)))
+    (if (called-interactively-p 'any) (insert result) result)))
+
+;;;###autoload
+(defun hindu-calendar-sidereal-solar (&optional year month date)
+  "Return sidereal/Lahiri solar date of proleptic Gregorian `YEAR' `MONTH' `DATE'."
+  (interactive)
+  (let* ((now (decode-time)); returns (ss mm hh day month year ...)
+         (year (or year (nth 5 now))) ; use (now) if val is not set
+         (month (or month (nth 4 now))) ; use (now) if val is not set
+         (date (or date (nth 3 now))) ; use (now) if val is not set
+         (rdie (hindu-calendar--gregorian-to-fixed year month date))
+         (h-date (hindu-calendar--sidereal-solar-from-fixed rdie))
+         (h-year (nth 0 h-date)) ; unpack results
+         (h-month (nth 1 h-date))
+         (h-day (nth 2 h-date))
+	 (result ""))
+    (setq result (format "%s-%02d, %d"
+                         (hindu-calendar--convert-month h-month nil)
+                         h-day
+                         (hindu-calendar--convert-epoch h-year)))
+    (if (called-interactively-p 'any) (insert result) result)))
+
+;;;###autoload
+(defun hindu-calendar-sidereal-lunar (&optional year month date)
+  "Return Hindu sidereal lunar date of proleptic Gregorian `YEAR' `MONTH' `DATE'."
+  (interactive)
+  (let* ((now (decode-time)); returns (ss mm hh day month year ...)
+         (year (or year (nth 5 now))) ; use (now) if val is not set
+         (month (or month (nth 4 now))) ; use (now) if val is not set
+         (date (or date (nth 3 now))) ; use (now) if val is not set
+         (rdie (hindu-calendar--gregorian-to-fixed year month date))
+         (hindu-date (hindu-calendar--sidereal-lunar-from-fixed rdie))
+         (h-year (nth 0 hindu-date)) ; unpack results
+         (h-month (nth 1 hindu-date))
+         (h-leap? (nth 2 hindu-date))
+         (h-day (nth 3 hindu-date))
+	 (result ""))
+    (setq result (format "%s-%s, %d"
+                         (hindu-calendar--convert-month h-month h-leap?)
+                         (hindu-calendar--tithi-to-paksha h-day)
+                         (hindu-calendar--convert-epoch h-year)))
+    (if (called-interactively-p 'any) (insert result) result)))
+
+;;;###autoload
+(defun hindu-calendar-asterism (&optional year month date)
+  "Return sidereal lunar nakshatra on proleptic Gregorian `YEAR' `MONTH' `DATE'."
+  (interactive)
+  (let* ((now (decode-time)); returns (ss mm hh day month year ...)
+         (year (or year (nth 5 now))) ; use (now) if val is not set
+         (month (or month (nth 4 now))) ; use (now) if val is not set
+         (date (or date (nth 3 now))) ; use (now) if val is not set
+         (rdie (hindu-calendar--gregorian-to-fixed year month date))
+         (nakshatra (hindu-calendar--nakshatra rdie))
+	 (result (nth nakshatra hindu-calendar--nakshatra-names)))
+    (if (called-interactively-p 'any) (insert result) result)))
 
 ;;------------------------------ BACKEND CODE ----------------------------------
 
@@ -248,215 +460,6 @@
 	  (+ (- fixed epoch) (hindu-calendar--fracday 6))))
     (1+ (mod (+ nak0 (floor sun nakshatra-day)) 27)))) ; nak. since epoch
 
-;;------------------------------ FRONTEND CODE ----------------------------------
-
-(defgroup hindu-calendar-group nil
-  "Settings for Hindu calendar."
-  :group 'calendar)
-
-(defcustom hindu-calendar-month-type "Chaitra"
-  "Type of month names.  One of Chaitra, Mesha, Madhu, Kesava, or Dhata."
-  :type '(choice (const :tag "Chaitra, Vaisakha,..." "Chaitra")
-                 (const :tag "Mesha, Vrishabha,..." "Mesha")
-                 (const :tag "Madhu, Madhava,..." "Madhu")
-                 (const :tag "Dhata, Aryaman,..." "Dhata")
-                 (const :tag "Baisakha, Jyestha,..." "Baisakha")
-		 (const :tag "Kesava, Narayana,..." "Kesava"))
-  :group 'hindu-calendar-group)
-
-(defcustom hindu-calendar-epoch-type "Kali"
-  "Type of epoch to reckon years.  One of Kali, Vikrama, Saka, or Bengali."
-  :type '(choice (const :tag "Kali Yuga (elapsed)" "Kali")
-                 (const :tag "Vikrama samvat" "Vikrama")
-                 (const :tag "Salivahana saka" "Saka")
-                 (const :tag "Bengali san" "Bengali"))
-  :group 'hindu-calendar-group)
-
-(defcustom hindu-calendar-lunar-type "Amanta"
-  "Type of lunar calendar: purnimanta for full-moon, amanta for new-moon."
-  :type '(choice (const :tag "Month ends on a new-moon day" "Amanta")
-                 (const :tag "Month ends on a full-moon day" "Purnimanta"))
-  :group 'hindu-calendar-group)
-
-; Spelling as per the Rashtriya Panchang
-(defconst hindu-calendar--chaitra-months
-  (list "" "Chaitra" "Vaisakha" "Jyaishtha" "Ashadha" "Sravana" "Bhadrapada"
-        "Asvina" "Kartika" "Margasirsa" "Pausha" "Magha" "Phalguna"))
-
-(defconst hindu-calendar--mesha-months
-  (list "" "Mesha" "Vrishabha" "Mithuna" "Karkata" "Simha" "Kanya"
-	"Tula" "Vrischika" "Dhanus" "Makara" "Kumbha" "Mina"))
-
-(defconst hindu-calendar--madhu-months
-  (list "" "Madhu" "Madhava" "Sukra" "Suchi" "Nabhas" "Nabhasya"
-	"Isha" "Urja" "Sahas" "Sahasya" "Tapas" "Tapasya"))
-
-(defconst hindu-calendar--kesava-months
-  (list "" "Vishnu" "Madhusudana" "Trivikrama" "Vamana" "Sridhara" "Hrishikesa"
-	"Padmanabha" "Damodara" "Kesava" "Narayana" "Madhava" "Govinda"))
-
-(defconst hindu-calendar--dhata-months
-  (list "" "Dhata" "Aryama" "Mitra" "Varuna" "Indra" "Vivasvan"
-	"Tvashta" "Vishnu" "Amsuman" "Bhaga" "Pusha" "Parjanya"))
-
-(defconst hindu-calendar--baisakha-months
-  (list "" "Baisakha" "Jyestha" "Asadha" "Srabana" "Bhadra" "Asvina"
-	"Kartika" "Margasira" "Pousha" "Magha" "Phalguna" "Chaitra"))
-
-(defconst hindu-calendar--nakshatra-names
-  (list "" "Asvini" "Bharani" "Krittika" "Rohini" "Mrigasiras" "Ardra"
-        "Punarvasu" "Pushya" "Aslesha" "Magha" "Purvaphalguni"
-	"Uttaraphalguni" "Hasta" "Chitra" "Svati" "Visakha" "Anuradha"
-	"Jyeshtha" "Mula" "Purvashadha" "Uttarashadha" "Sravana"
-	"Dhanishta" "Satabhishaj" "Purvabhadra" "Uttarabhadra" "Revati"))
-
-(defun hindu-calendar--tithi-to-paksha (tithi)
-  "Convert given `TITHI' into krishna-paksha (K) or shukla-paksha (S)."
-  (if (> tithi 15)
-      (format "K%02d" (- tithi 15))
-      (format "S%02d" tithi)))
-
-;; Conversion functions for epochs. `checkdoc' does not complain about `fset'.
-; (fset 'hindu-calendar--vikrama (lambda (kali) (- kali 3044)))
-
-(defun hindu-calendar--convert-epoch (year)
-  "Convert Kali-yuga elapsed `YEAR' into epoch type (Saka, Vikrama,...)."
-  (cond
-   ((string= "vikrama" (downcase hindu-calendar-epoch-type))
-    (- year 3044))
-   ((string=  "saka" (downcase hindu-calendar-epoch-type))
-    (- year 3179))
-   ((string= "bengali" (downcase hindu-calendar-epoch-type))
-    (- year 3694))
-   (t year))) ; default is Kali Year itself
-
-(defun hindu-calendar--convert-month (month leap-month-p)
-  "Convert `MONTH' number to string, accounting for `LEAP-MONTH-P'."
-  (cond
-   ((string= (downcase hindu-calendar-month-type) "mesha")
-    (nth month hindu-calendar--mesha-months))
-   ((string= (downcase hindu-calendar-month-type) "madhu")
-    (if leap-month-p "Amhaspati" (nth month hindu-calendar--madhu-months)))
-   ((string= (downcase hindu-calendar-month-type) "kesava")
-    (if leap-month-p "Purushottama" (nth month hindu-calendar--kesava-months)))
-   ((string= (downcase hindu-calendar-month-type) "dhata")
-    (nth month hindu-calendar--dhata-months))
-   ((string= (downcase hindu-calendar-month-type) "baisakha")
-    (nth month hindu-calendar--baisakha-months))
-   (t
-    (if leap-month-p
-	(concat "Adhika-" (nth month hindu-calendar--chaitra-months))
-	(nth month hindu-calendar--chaitra-months))))) ; default is Chaitra-type
-
-(defun hindu-calendar--print-to-echo ()
-  "Print Hindu sidereal dates to echo area."
-  (interactive)
-  (let* ((date (calendar-cursor-to-date))
-         (day (nth 1 date))
-         (month (nth 0 date))
-         (year (nth 2 date)))
-    (message "Hindu date: Lunar %s nakshatra %s; Solar %s"
-	    (hindu-calendar-asterism year month day)
-	    (hindu-calendar-sidereal-lunar year month day)
-	    (hindu-calendar-sidereal-solar year month day))))
-
-(define-key calendar-mode-map (kbd "p H") 'hindu-calendar--print-to-echo)
-
-;;;###autoload
-(defun hindu-calendar-tropical-solar (&optional year month date)
-  "Return Hindu tropical solar date of proleptic Gregorian `YEAR' `MONTH' `DATE'.
-It is equivalent to Indian National Calendar civil date used by the Indian govt."
-  (interactive)
-  (let* ((now (decode-time)); returns (ss mm hh day month year ...)
-         (year (or year (nth 5 now))) ; use (now) if val is not set
-         (month (or month (nth 4 now))) ; use (now) if val is not set
-         (date (or date (nth 3 now))) ; use (now) if val is not set
-         (rdie (hindu-calendar--gregorian-to-fixed year month date))
-         (h-date (hindu-calendar--tropical-solar-from-fixed rdie))
-         (h-year (nth 0 h-date)) ; unpack results
-         (h-month (nth 1 h-date))
-         (h-day (nth 2 h-date))
-	 (result ""))
-    (setq result (format "%s-%02d, %d"
-                         (hindu-calendar--convert-month h-month nil)
-                         h-day
-                         (hindu-calendar--convert-epoch h-year)))
-    (if (called-interactively-p 'any) (insert result) result)))
-
-;;;###autoload
-(defun hindu-calendar-tropical-lunar (&optional year month date)
-  "Return Hindu tropical lunar date of proleptic Gregorian `YEAR' `MONTH' `DATE'."
-  (interactive)
-  (let* ((now (decode-time)); returns (ss mm hh day month year ...)
-         (year (or year (nth 5 now))) ; use (now) if val is not set
-         (month (or month (nth 4 now))) ; use (now) if val is not set
-         (date (or date (nth 3 now))) ; use (now) if val is not set
-         (rdie (hindu-calendar--gregorian-to-fixed year month date))
-         (hindu-date (hindu-calendar--tropical-lunar-from-fixed rdie))
-         (h-year (nth 0 hindu-date)) ; unpack results
-         (h-month (nth 1 hindu-date))
-         (h-leap? (nth 2 hindu-date))
-         (h-day (nth 3 hindu-date))
-	 (result ""))
-    (setq result (format "%s-%s, %d"
-                         (hindu-calendar--convert-month h-month h-leap?)
-                         (hindu-calendar--tithi-to-paksha h-day)
-                         (hindu-calendar--convert-epoch h-year)))
-    (if (called-interactively-p 'any) (insert result) result)))
-
-;;;###autoload
-(defun hindu-calendar-sidereal-solar (&optional year month date)
-  "Return sidereal/Lahiri solar date of proleptic Gregorian `YEAR' `MONTH' `DATE'."
-  (interactive)
-  (let* ((now (decode-time)); returns (ss mm hh day month year ...)
-         (year (or year (nth 5 now))) ; use (now) if val is not set
-         (month (or month (nth 4 now))) ; use (now) if val is not set
-         (date (or date (nth 3 now))) ; use (now) if val is not set
-         (rdie (hindu-calendar--gregorian-to-fixed year month date))
-         (h-date (hindu-calendar--sidereal-solar-from-fixed rdie))
-         (h-year (nth 0 h-date)) ; unpack results
-         (h-month (nth 1 h-date))
-         (h-day (nth 2 h-date))
-	 (result ""))
-    (setq result (format "%s-%02d, %d"
-                         (hindu-calendar--convert-month h-month nil)
-                         h-day
-                         (hindu-calendar--convert-epoch h-year)))
-    (if (called-interactively-p 'any) (insert result) result)))
-
-;;;###autoload
-(defun hindu-calendar-sidereal-lunar (&optional year month date)
-  "Return Hindu sidereal lunar date of proleptic Gregorian `YEAR' `MONTH' `DATE'."
-  (interactive)
-  (let* ((now (decode-time)); returns (ss mm hh day month year ...)
-         (year (or year (nth 5 now))) ; use (now) if val is not set
-         (month (or month (nth 4 now))) ; use (now) if val is not set
-         (date (or date (nth 3 now))) ; use (now) if val is not set
-         (rdie (hindu-calendar--gregorian-to-fixed year month date))
-         (hindu-date (hindu-calendar--sidereal-lunar-from-fixed rdie))
-         (h-year (nth 0 hindu-date)) ; unpack results
-         (h-month (nth 1 hindu-date))
-         (h-leap? (nth 2 hindu-date))
-         (h-day (nth 3 hindu-date))
-	 (result ""))
-    (setq result (format "%s-%s, %d"
-                         (hindu-calendar--convert-month h-month h-leap?)
-                         (hindu-calendar--tithi-to-paksha h-day)
-                         (hindu-calendar--convert-epoch h-year)))
-    (if (called-interactively-p 'any) (insert result) result)))
-
-;;;###autoload
-(defun hindu-calendar-asterism (&optional year month date)
-  "Return sidereal lunar nakshatra on proleptic Gregorian `YEAR' `MONTH' `DATE'."
-  (interactive)
-  (let* ((now (decode-time)); returns (ss mm hh day month year ...)
-         (year (or year (nth 5 now))) ; use (now) if val is not set
-         (month (or month (nth 4 now))) ; use (now) if val is not set
-         (date (or date (nth 3 now))) ; use (now) if val is not set
-         (rdie (hindu-calendar--gregorian-to-fixed year month date))
-         (nakshatra (hindu-calendar--nakshatra rdie))
-	 (result (nth nakshatra hindu-calendar--nakshatra-names)))
-    (if (called-interactively-p 'any) (insert result) result)))
 
 ;;----------------------------- PROVIDE PACKAGE ---------------------------------
 (provide 'hindu-calendar)

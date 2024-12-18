@@ -68,6 +68,8 @@ explanation](https://www.drikpanchang.com/faq/faq-ans8.html).
 
 ## Customization
 
+All the below options can be customized via `M-x customize-group RET hindu-calendar`.
+
 By default, the month names use `"Chaitra"`, Vaisakha, etc. Other options are:
 
 - `"Mesha"` for Mesha, Vrishabha, etc. which are zodiacal names.
@@ -93,18 +95,20 @@ By default, `"amanta"` new-moon based lunar calendar is used. Customize variable
 
 Here are some typical combinations:
 
-| Category                   | `hindu-calendar-` | `hindu-calendar-month-type` | `hindu-calendar-epoch-type` |
-|:---------------------------|-------------------|-----------------------------|-----------------------------|
-| Indian national calendar   | tropical-solar    | chaitra                     | saka                        |
-| Kannadiga, Marathi, Telugu | sidereal-lunar    | chaitra                     | saka                        |
-| Gujarati                   | sidereal-lunar    | chaitra                     | vikrama                     |
-| Tamizhan                   | sidereal-solar    | chaitra                     | saka, kali                  |
-| Malayali                   | sidereal-solar    | mesha                       | kollam                      |
-| Bengali                    | sidereal-solar    | baisakha                    | bengali                     |
-| Odia                       | sidereal-solar    | baisakha                    | bengali, vilayati           |
-| Nepali, Punjabi            | sidereal-solar    | baisakha                    | vikrama                     |
-| Rest of India (purnimanta) | sidereal-lunar    | chaitra                     | vikrama                     |
-| Vedic (Taittiriya)	     | tropical-lunar    | madhu                       | N/A                         |
+| Category                      | `hindu-calendar-` | `hindu-calendar-month-type` | `hindu-calendar-epoch-type` |
+|:------------------------------|-------------------|-----------------------------|-----------------------------|
+| [Indian national calendar][1] | tropical-solar    | chaitra                     | saka                        |
+| Kannadiga, Marathi, Telugu    | sidereal-lunar    | chaitra                     | saka                        |
+| Gujarati                      | sidereal-lunar    | chaitra                     | vikrama                     |
+| Tamizhan                      | sidereal-solar    | chaitra                     | saka, kali                  |
+| Malayali                      | sidereal-solar    | mesha                       | kollam                      |
+| Bengali                       | sidereal-solar    | baisakha                    | bengali                     |
+| Odia                          | sidereal-solar    | baisakha                    | bengali, vilayati           |
+| Nepali, Punjabi               | sidereal-solar    | baisakha                    | vikrama                     |
+| Rest of India (purnimanta)    | sidereal-lunar    | chaitra                     | vikrama                     |
+| Vedic (Vajasaneyi/Taittiriya) | tropical-lunar    | madhu                       | N/A                         |
+
+[1]: https://en.wikipedia.org/wiki/Indian_national_calendar
 
 Of course, each language has its own names for the months (e.g., Agraha(ya)n,
 Margazhi, etc. for Margasirsa) but it is hoped that the above is indicative
@@ -112,8 +116,8 @@ enough.
 
 It is also integrated with Emacs' calendar. Type `M-x calendar` to open-up 3-month
 calendar view. Move cursor (point) over any date you want. Type `p H` (uppercase H)
-to display Hindu calendar in the echo area. Here's an example with settings for
-someone in Mathura or Varanasi:
+to print Hindu calendar in the echo area. Here's an example with settings for
+someone in Mathura or Varanasi, where Purnimanta/Vikrama era is the norm:
 
 [Sample screenshot](screenshot.jpg):
 

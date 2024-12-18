@@ -35,14 +35,16 @@
 ;; Usage:
 ;;     All of the functions can be called interactively or programmatically.
 ;;
-;; Sidereal lunar:          M-x hindu-calendar-sidereal-lunar
-;; Tropical lunar:          M-x hindu-calendar-tropical-lunar
-;; Sidereal solar:          M-x hindu-calendar-sidereal-solar
-;; Tropical solar:          M-x hindu-calendar-tropical-solar
-;; Nakshatra (sidereal):    M-x hindu-calendar-asterism
-;; Personal customization:  M-x customize-group RET hindu-calendar-group
+;; (require 'hindu-calendar)
 ;;
-;; See README.md for more instructions and customizations.
+;; Sidereal lunar:        M-x hindu-calendar-sidereal-lunar
+;; Tropical lunar:        M-x hindu-calendar-tropical-lunar
+;; Sidereal solar:        M-x hindu-calendar-sidereal-solar
+;; Tropical solar:        M-x hindu-calendar-tropical-solar
+;; Nakshatra (sidereal):  M-x hindu-calendar-asterism
+;; Tweak variables:       M-x customize-group RET hindu-calendar
+;;
+;; (hindu-calendar-keybindings) ; Optional
 
 ;;; Installation:
 ;;
@@ -68,8 +70,8 @@
 
 ;;------------------------------ FRONTEND CODE ----------------------------------
 
-(defgroup hindu-calendar-group nil
-  "Settings for Hindu calendar."
+(defgroup hindu-calendar nil
+  "Options for Hindu calendar."
   :group 'calendar)
 
 (defcustom hindu-calendar-month-type "Chaitra"
@@ -80,7 +82,7 @@
                  (const :tag "Dhata, Aryaman,..." "Dhata")
                  (const :tag "Baisakha, Jyestha,..." "Baisakha")
 		 (const :tag "Kesava, Narayana,..." "Kesava"))
-  :group 'hindu-calendar-group)
+  :group 'hindu-calendar)
 
 (defcustom hindu-calendar-epoch-type "Kali"
   "Type of epoch to reckon years.  One of Kali, Vikrama, Saka, or Bengali."
@@ -88,7 +90,7 @@
                  (const :tag "Vikrama samvat" "Vikrama")
                  (const :tag "Salivahana saka" "Saka")
                  (const :tag "Bengali san" "Bengali"))
-  :group 'hindu-calendar-group)
+  :group 'hindu-calendar)
 
 (defcustom hindu-calendar-lunar-type "Amanta"
   "Type of lunar calendar: purnimanta for full-moon, amanta for new-moon."
@@ -178,7 +180,9 @@
 	    (hindu-calendar-sidereal-lunar year month day)
 	    (hindu-calendar-sidereal-solar year month day))))
 
-(define-key calendar-mode-map (kbd "p H") 'hindu-calendar--print-to-echo)
+(defun hindu-calendar-keybindings ()
+  "Setup some useful keybindings."
+  (define-key calendar-mode-map (kbd "p H") 'hindu-calendar--print-to-echo))
 
 ;;;###autoload
 (defun hindu-calendar-tropical-solar (&optional year month date)

@@ -4,7 +4,7 @@ A simplified arithmetical Hindu calendar (panchanga) for Emacs.
 
 This package provides traditional Hindu calendars (solar and lunar) using
 arithmetic based on the _mean_ motions of the Sun and Moon. It calculates tithi
-and nakshatra. It provides both tropical (sāyana) and sidereal (nirayana/Lahiri
+and nakshatra. It provides both tropical (sāyana) and sidereal (nirayana/Chitrapaksha
 ayanāmsa) variants. Lunar calendars can be chosen between amānta or purnimānta.
 
 ## Installation
@@ -148,9 +148,26 @@ and thus gives best accuracy.
 
 Yes, many. Please [report a new issue](https://github.com/bdsatish/hindu-calendar/issues).
 
+## Contributions
+
+By submitting any snippet of code to this project, you agree with the [Developer
+Certificate of Origin](https://developercertificate.org/) by adding a line:
+
+    Signed-off-by: Anamika Ashok <nameless@example.org>
+
+using your real name. Use `git commit -s` to do this automatically.
+
 ## Licence
 
 Copyright (C) B.D.Satish. GNU Affero GPL v3 (or later).
+
+### A word
+
+Predictive astrology is pseudoscience. The so-called "Vedic astrology"
+is unrelated to the Vedas. The original [Vedanga
+Jyotisha](https://archive.org/details/VedangaJyotisa) (~1200 BCE) and
+[Surya Siddhanta](https://archive.org/details/in.ernet.dli.2015.69065)
+(~400 CE) are purely astronomical.
 
 <!--
 [Dieter Koch's](https://www.gilgamesh.ch/kalender/kalender.html) website uses

@@ -29,8 +29,8 @@
 ;; This package provides traditional Hindu calendars (solar and lunar) using
 ;; arithmetic based on the mean motions of the Sun and Moon.  It calculates
 ;; tithi and nakshatra.  It provides both tropical (sayana) and sidereal
-;; (nirayana/Lahiri) variants.  Lunar calendar can be chosen between amanta
-;; or purnimanta.
+;; (nirayana/Chitrapaksha) variants.  Lunar calendar can be chosen between
+;; amanta or purnimanta.
 ;;
 ;; Usage:
 ;;     All of the functions can be called interactively or programmatically.
@@ -137,12 +137,7 @@
       (format "K%02d" (- tithi 15))
       (format "S%02d" tithi)))
 
-;; Conversion functions for epochs. `checkdoc' does not complain about `fset'.
-; (fset 'hindu-calendar--vikrama (lambda (kali) (- kali 3044)))
-
-; https://examguru.co.in/study-material-for-all-competitive-exams/indian-history/introduction-indian-history
-; https://trueindianhistory-kvchelam.blogspot.com/2010/02/varahamihira-and-his-sakakala-by-sri-v.html
-; See 'Book of Indian eras' by Alexander Cunningham and 'Indian Eras' by Kota Venkatachalam 
+; See 'Book of Indian eras' by Alexander Cunningham and 'Indian Eras' by Kota Venkatachalam
 (defun hindu-calendar--convert-epoch (year)
   "Convert Kali-yuga elapsed `YEAR' into epoch type (Saka, Vikrama,...)."
   (cond
@@ -236,7 +231,7 @@ It is equivalent to Indian National Calendar civil date used by the Indian govt.
 
 ;;;###autoload
 (defun hindu-calendar-sidereal-solar (&optional year month date)
-  "Return sidereal/Lahiri solar date of proleptic Gregorian `YEAR' `MONTH' `DATE'."
+  "Return Hindu sidereal solar date of proleptic Gregorian `YEAR' `MONTH' `DATE'."
   (interactive)
   (let* ((now (decode-time)); returns (ss mm hh day month year ...)
          (year (or year (nth 5 now))) ; use (now) if val is not set
@@ -360,7 +355,7 @@ It is equivalent to Indian National Calendar civil date used by the Indian govt.
 
 ; average length of a month from (sayana) Vaisakha to (sayana) Chaitra
 ; (setq mean-days '(0.0 30.4758333 30.9788888 31.3403472 31.4545833 31.2868750 30.8879861
-;                   30.3737499 29.8851388 29.5477083 29.4434722 29.5961805 29.9714583)
+;                   30.3737499 29.8851388 29.5477083 29.4434722 29.5961805 29.9714583))
 ; If you add all the above, it gives 365.2422 which is actually tropical year!
 ; Cumulative sum of above array is given below
 (defconst hindu-calendar--tropical-transits
@@ -369,7 +364,7 @@ It is equivalent to Indian National Calendar civil date used by the Indian govt.
     335.2707634 365.2422217))
 
 ; Sidereal year is longer than tropical, so equally distribute the difference to all months
-; (mapcar (lambda (elem) (+ elem (/ (- 365.256363 365.2422) 12))) mean-days)
+; (mapcar (lambda (elem) (+ elem (/ (- 365.256363 365.24219) 12))) mean-days)
 ; Cumulative sum of above array is given below
 (defconst hindu-calendar--sidereal-transits
   '(0.0 30.47701188 61.45707927 92.79860505 124.25436693
@@ -379,7 +374,7 @@ It is equivalent to Indian National Calendar civil date used by the Indian govt.
 (defun hindu-calendar--solar-calendar-from-fixed (fixed tropicalp)
   "Return solar date, tropical if `TROPICALP' else sidereal, given `FIXED' date."
   ; Tropical solar epoch is sayana Sun in 0° Ar 22/Mar/-3101 = -1132901 R.D.
-  ; Sidereal (Lahiri) solar epoch is Sun in 0° Ar = 01/Feb/-3101
+  ; Sidereal (Chitrapaksha) solar epoch is Sun in 0° Ar = 01/Feb/-3101
   (let* ((epoch (if tropicalp -1132901 -1132949))
          (transits (if tropicalp
 		       hindu-calendar--tropical-transits
@@ -460,10 +455,10 @@ It is equivalent to Indian National Calendar civil date used by the Indian govt.
     "Return tropical lunar date (YEAR MONTH LEAP-MONTH? DAY), given `FIXED' date."
     (hindu-calendar--lunar-calendar-from-fixed fixed t))
 
-; Daily nakshatra as per Lahiri ayanamsha
+; Daily nakshatra as per Chitrapaksha ayanamsha
 (defun hindu-calendar--nakshatra (fixed)
   "Return the lunar mansion (nakshatra) on `FIXED' date.  1= Asvini,.., 27= Revati."
-  ; Sidereal (Lahiri) solar epoch is when Sun in 0° Ar = 01/Feb/-3101 = -1132949 R.D, Aslesha (#9)
+  ; Sidereal (Chitrapaksha) solar epoch is when Sun in 0° Ar = 01/Feb/-3101 = -1132949 R.D, Aslesha (#9)
   (let* ((epoch -1132950.375) ; 15:00 on 31/Jan/-3101 is when Ashlesha begins at Ujjain
 	 (nakshatra-month 27.3216615625) ; num. days in sidereal month (fixed star to fixed star)
 	 (nakshatra-day (/ nakshatra-month 27)) ; 27 nak. in a month

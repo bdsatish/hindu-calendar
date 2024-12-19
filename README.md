@@ -13,15 +13,15 @@ This package is available on MELPA, do `M-x package-install RET hindu-calendar`.
 If you want to install it manually (example):
 
 ```shell
-mkdir ~/.emacs.d/lisp/ && cd $_
-git clone https://github.com/bdsatish/hindu-calendar
+git clone https://github.com/bdsatish/hindu-calendar ~/.emacs.d/
 ```
 
 and add these lines your `~/.emacs` (or equivalent init file):
 
 ```lisp
-(add-to-list 'load-path "~/.emacs.d/lisp/hindu-calendar")
+(add-to-list 'load-path "~/.emacs.d/hindu-calendar/")
 (require 'hindu-calendar)
+(hindu-calendar-keybindings) ; Optional key bindings
 ```
 
 ## Usage
@@ -99,7 +99,7 @@ Here are some typical combinations:
 |:------------------------------|-------------------|-----------------------------|-----------------------------|
 | [Indian national calendar][1] | tropical-solar    | chaitra                     | saka                        |
 | Kannadiga, Marathi, Telugu    | sidereal-lunar    | chaitra                     | saka                        |
-| Gujarati                      | sidereal-lunar    | chaitra                     | vikrama                     |
+| Gujarati                      | sidereal-lunar    | chaitra                     | vikrama (kārttikādi)        |
 | Tamizhan                      | sidereal-solar    | chaitra                     | saka, kali                  |
 | Malayali                      | sidereal-solar    | mesha                       | kollam                      |
 | Bengali                       | sidereal-solar    | baisakha                    | bengali                     |

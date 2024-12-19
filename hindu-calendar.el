@@ -89,7 +89,8 @@
   :type '(choice (const :tag "Kali Yuga (elapsed)" "Kali")
                  (const :tag "Vikrama samvat" "Vikrama")
                  (const :tag "Salivahana saka" "Saka")
-                 (const :tag "Bengali san" "Bengali"))
+                 (const :tag "Bengali san" "Bengali")
+                 (const :tag "Saptarshi era (elapsed)" "Saptarshi"))
   :group 'hindu-calendar)
 
 (defcustom hindu-calendar-lunar-type "Amanta"
@@ -139,13 +140,20 @@
 ;; Conversion functions for epochs. `checkdoc' does not complain about `fset'.
 ; (fset 'hindu-calendar--vikrama (lambda (kali) (- kali 3044)))
 
+; https://examguru.co.in/study-material-for-all-competitive-exams/indian-history/introduction-indian-history
+; https://trueindianhistory-kvchelam.blogspot.com/2010/02/varahamihira-and-his-sakakala-by-sri-v.html
+; See 'Book of Indian eras' by Alexander Cunningham and 'Indian Eras' by Kota Venkatachalam 
 (defun hindu-calendar--convert-epoch (year)
   "Convert Kali-yuga elapsed `YEAR' into epoch type (Saka, Vikrama,...)."
   (cond
+   ((string= "saptarshi" (downcase hindu-calendar-epoch-type))
+    (- year 25)) ; Epoch 3077 BCE elapsed or 3076 BCE current
    ((string= "vikrama" (downcase hindu-calendar-epoch-type))
-    (- year 3044))
+    (- year 3044)) ; Epoch 58 BCE (-57)
+   ((string= "ce" (downcase hindu-calendar-epoch-type))
+    (- year 3101)) ; Kali to CE/BCE Gregorian of today
    ((string=  "saka" (downcase hindu-calendar-epoch-type))
-    (- year 3179))
+    (- year 3179)) ; Epoch 78 CE
    ((string= "bengali" (downcase hindu-calendar-epoch-type))
     (- year 3694))
    (t year))) ; default is Kali Year itself

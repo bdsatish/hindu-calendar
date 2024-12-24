@@ -123,6 +123,12 @@ someone in Mathura or Varanasi, where Purnimanta/Vikrama era is the norm:
 
 ![Sample screenshot](screenshot.png "Hindu Panchanga")
 
+The tropical solar calendar has a leap day which occurs once in four years
+(Gregorian) on 19-Feb (instead of 29-Feb). That is, the Kumbha masa has 29 days
+normally and 30 days in a leap year, similar to the post-2019 [Falgun of
+Bangladeshi calendar](https://en.wikipedia.org/wiki/Bengali_calendars). Thus,
+in the sidereal solar calendar, Chaitra has 31 days in a leap year.
+
 ## Accuracy
 
 This program is about as accurate as your traditional siddhantic panchangas.
@@ -161,11 +167,11 @@ using your real name. Use `git commit -s` to do this automatically.
 
 Copyright (C) B.D.Satish. GNU Affero GPL v3 (or later).
 
-### A word
+### Note
 
-Predictive astrology is pseudoscience. The so-called "Vedic astrology"
-is unrelated to the Vedas. The original [Vedanga
-Jyotisha](https://archive.org/details/VedangaJyotisa) (~1200 BCE) and
+The so-called "Vedic astrology" has no basis in the Vedas, Upanishads, Bhagavad
+Gita, Mahabharata or Ramayana. It is a fringe science of Hinduism. The original
+[Vedanga Jyotisha](https://archive.org/details/VedangaJyotisa) (~1200 BCE) and
 [Surya Siddhanta](https://archive.org/details/in.ernet.dli.2015.69065)
 (~400 CE) are purely astronomical.
 

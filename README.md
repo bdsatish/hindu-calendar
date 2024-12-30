@@ -123,11 +123,10 @@ someone in Mathura or Varanasi, where Purnimanta/Vikrama era is the norm:
 
 ![Sample screenshot](screenshot.png "Hindu Panchanga")
 
-The tropical solar calendar has a leap day which occurs once in four years
-(Gregorian) on 19-Feb (instead of 29-Feb). That is, the Kumbha masa has 29 days
-normally and 30 days in a leap year, similar to the post-2019 [Falgun of
-Bangladeshi calendar](https://en.wikipedia.org/wiki/Bengali_calendars). Thus,
-in the sidereal solar calendar, Chaitra has 31 days in a leap year.
+The tropical solar calendar has 29 to 32 days depending on the month. Normally,
+six months from Vaishkha onwards have 31 days and the rest six have 30 days, but
+this pattern is not fixed and changes yearly. There is no concept of a 'leap'
+year.
 
 ## Accuracy
 

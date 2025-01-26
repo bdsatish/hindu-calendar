@@ -142,9 +142,9 @@
   "Convert Kali-yuga elapsed `YEAR' into epoch type (Saka, Vikrama,...)."
   (cond
    ((string= "saptarshi" (downcase hindu-calendar-epoch-type))
-    (- year 25)) ; Epoch 3077 BCE elapsed or 3076 BCE current
+    (- year 26)) ; laukika era starts 3076 BCE (-3075)
    ((string= "vikrama" (downcase hindu-calendar-epoch-type))
-    (- year 3044)) ; Epoch 58 BCE (-57)
+    (- year 3044)) ; elapsed epoch 58 BCE (-57)
    ((string= "ce" (downcase hindu-calendar-epoch-type))
     (- year 3101)) ; Kali to CE/BCE Gregorian of today
    ((string=  "saka" (downcase hindu-calendar-epoch-type))
@@ -370,6 +370,13 @@ It is equivalent to Indian National Calendar civil date used by the Indian govt.
   '(0.0 30.47701188 61.45707927 92.79860505 124.25436693
     155.54242052 186.43158520 216.80651368 246.69283107
     276.24171795 305.68636873 335.28372782 365.25636470))
+
+; Garga's unequal spacing of nakshatras. Ending longitudes
+(defconst hindu-calendar--garga-spacing
+  '(0.0 13.33333334 20.0 33.33333334 53.33333334 66.66666667 73.33333334 93.33333334
+    106.66666667 113.33333334 126.66666667 140.0 160.0 173.33333334 186.66666667
+    193.33333334 213.33333334 226.66666667 233.33333334 246.66666667 260.0 280.0
+    293.33333334 306.66666667 313.33333334 326.66666667 346.66666667 360.0))
 
 (defun hindu-calendar--solar-calendar-from-fixed (fixed tropicalp)
   "Return solar date, tropical if `TROPICALP' else sidereal, given `FIXED' date."

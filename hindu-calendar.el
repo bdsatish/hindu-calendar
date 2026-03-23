@@ -1,6 +1,6 @@
 ;;; hindu-calendar.el --- Arithmetical traditional Hindu calendar (panchanga)  -*- lexical-binding:t -*-
 
-;; Copyright (C) 2024 B.D.Satish <bdsatish@gmail.com>
+;; Copyright (C) 2024-2026 B.D.Satish <bdsatish@gmail.com>
 
 ;; Author: B.D.Satish <bdsatish@gmail.com>
 ;; Maintainer: B.D.Satish <bdsatish@gmail.com>
@@ -66,7 +66,10 @@
 ;;; Code:
 ;; Divided into two parts, backend and frontend.
 
-(require 'calendar) ; only for (hindu-calendar--print-to-echo)
+(require 'calendar)
+(require 'solar)
+(require 'lunar)
+(require 'cal-julian)
 
 ;;------------------------------ FRONTEND CODE ----------------------------------
 
@@ -102,7 +105,7 @@
 ; Spelling as per the Rashtriya Panchang
 (defconst hindu-calendar--chaitra-months
   (list "" "Chaitra" "Vaisakha" "Jyaishtha" "Ashadha" "Sravana" "Bhadrapada"
-        "Asvina" "Kartika" "Margasirsa" "Pausha" "Magha" "Phalguna"))
+        "Asvina" "Kartika" "Margasirsa" "Pausha" "Magha" "Phalguna" "Chaitra"))
 
 (defconst hindu-calendar--mesha-months
   (list "" "Mesha" "Vrishabha" "Mithuna" "Karkata" "Simha" "Kanya"
@@ -110,11 +113,11 @@
 
 (defconst hindu-calendar--madhu-months
   (list "" "Madhu" "Madhava" "Sukra" "Suchi" "Nabhas" "Nabhasya"
-	"Isha" "Urja" "Sahas" "Sahasya" "Tapas" "Tapasya"))
+	"Isha" "Urja" "Sahas" "Sahasya" "Tapas" "Tapasya" "Madhu"))
 
 (defconst hindu-calendar--kesava-months
   (list "" "Vishnu" "Madhusudana" "Trivikrama" "Vamana" "Sridhara" "Hrishikesa"
-	"Padmanabha" "Damodara" "Kesava" "Narayana" "Madhava" "Govinda"))
+	"Padmanabha" "Damodara" "Kesava" "Narayana" "Madhava" "Govinda" "Vishnu"))
 
 (defconst hindu-calendar--dhata-months
   (list "" "Dhata" "Aryama" "Mitra" "Varuna" "Indra" "Vivasvan"
@@ -196,8 +199,7 @@ It is equivalent to Indian National Calendar civil date used by the Indian govt.
          (year (or year (nth 5 now))) ; use (now) if val is not set
          (month (or month (nth 4 now))) ; use (now) if val is not set
          (date (or date (nth 3 now))) ; use (now) if val is not set
-         (rdie (hindu-calendar--gregorian-to-fixed year month date))
-         (h-date (hindu-calendar--tropical-solar-from-fixed rdie))
+         (h-date (hindu-calendar--tropical-solar-from-gregorian year month date))
          (h-year (nth 0 h-date)) ; unpack results
          (h-month (nth 1 h-date))
          (h-day (nth 2 h-date))
@@ -216,8 +218,7 @@ It is equivalent to Indian National Calendar civil date used by the Indian govt.
          (year (or year (nth 5 now))) ; use (now) if val is not set
          (month (or month (nth 4 now))) ; use (now) if val is not set
          (date (or date (nth 3 now))) ; use (now) if val is not set
-         (rdie (hindu-calendar--gregorian-to-fixed year month date))
-         (hindu-date (hindu-calendar--tropical-lunar-from-fixed rdie))
+         (hindu-date (hindu-calendar--tropical-lunar-from-gregorian year month date))
          (h-year (nth 0 hindu-date)) ; unpack results
          (h-month (nth 1 hindu-date))
          (h-leap? (nth 2 hindu-date))
@@ -237,8 +238,7 @@ It is equivalent to Indian National Calendar civil date used by the Indian govt.
          (year (or year (nth 5 now))) ; use (now) if val is not set
          (month (or month (nth 4 now))) ; use (now) if val is not set
          (date (or date (nth 3 now))) ; use (now) if val is not set
-         (rdie (hindu-calendar--gregorian-to-fixed year month date))
-         (h-date (hindu-calendar--sidereal-solar-from-fixed rdie))
+         (h-date (hindu-calendar--sidereal-solar-from-gregorian year month date))
          (h-year (nth 0 h-date)) ; unpack results
          (h-month (nth 1 h-date))
          (h-day (nth 2 h-date))
@@ -257,8 +257,7 @@ It is equivalent to Indian National Calendar civil date used by the Indian govt.
          (year (or year (nth 5 now))) ; use (now) if val is not set
          (month (or month (nth 4 now))) ; use (now) if val is not set
          (date (or date (nth 3 now))) ; use (now) if val is not set
-         (rdie (hindu-calendar--gregorian-to-fixed year month date))
-         (hindu-date (hindu-calendar--sidereal-lunar-from-fixed rdie))
+         (hindu-date (hindu-calendar--sidereal-lunar-from-gregorian year month date))
          (h-year (nth 0 hindu-date)) ; unpack results
          (h-month (nth 1 hindu-date))
          (h-leap? (nth 2 hindu-date))
@@ -278,8 +277,7 @@ It is equivalent to Indian National Calendar civil date used by the Indian govt.
          (year (or year (nth 5 now))) ; use (now) if val is not set
          (month (or month (nth 4 now))) ; use (now) if val is not set
          (date (or date (nth 3 now))) ; use (now) if val is not set
-         (rdie (hindu-calendar--gregorian-to-fixed year month date))
-         (nakshatra (hindu-calendar--nakshatra rdie))
+         (nakshatra (hindu-calendar--nakshatra-from-gregorian year month date))
 	 (result (nth nakshatra hindu-calendar--nakshatra-names)))
     (if (called-interactively-p 'any) (insert result) result)))
 
@@ -463,7 +461,7 @@ It is equivalent to Indian National Calendar civil date used by the Indian govt.
     (hindu-calendar--lunar-calendar-from-fixed fixed t))
 
 ; Daily nakshatra as per Chitrapaksha ayanamsha
-(defun hindu-calendar--nakshatra (fixed)
+(defun hindu-calendar--nakshatra-from-fixed (fixed)
   "Return the lunar mansion (nakshatra) on `FIXED' date.  1= Asvini,.., 27= Revati."
   ; Sidereal (Chitrapaksha) solar epoch is when Sun in 0° Ar = 01/Feb/-3101 = -1132949 R.D, Aslesha (#9)
   (let* ((epoch -1132950.375) ; 15:00 on 31/Jan/-3101 is when Ashlesha begins at Ujjain
@@ -474,7 +472,248 @@ It is equivalent to Indian National Calendar civil date used by the Indian govt.
 	  (+ (- fixed epoch) (hindu-calendar--fracday 6))))
     (1+ (mod (+ nak0 (floor sun nakshatra-day)) 27)))) ; nak. since epoch
 
+;;----------------- new code -------------
+
+(defun hindu-calendar--normalize-degrees (degrees)
+  "Normalize DEGREES to the 0-360 range."
+  (mod degrees 360.0))
+
+(defun hindu-calendar--get-sunrise-ut (gregorian-date)
+  "Calculate sunrise in UT for GREGORIAN-DATE using Emacs location settings.
+Defaults to Ujjain, India if calendar coordinates are unset.
+Falls back to UTC 0h if no sunrise exists (e.g., polar night/day)."
+  (let* ((calendar-latitude (if (bound-and-true-p calendar-latitude)
+                                calendar-latitude
+                              23.1765))
+         (calendar-longitude (if (bound-and-true-p calendar-longitude)
+                                 calendar-longitude
+                               75.7885))
+         (calendar-time-zone (if (bound-and-true-p calendar-time-zone)
+                                 calendar-time-zone
+                               330)) ; +5:30 IST in minutes from UTC 0
+
+         (sun-data (solar-sunrise-sunset gregorian-date))
+         (sunrise-local (and sun-data (car (car sun-data)))))
+
+    (if (numberp sunrise-local)
+        (- sunrise-local (/ calendar-time-zone 60.0))
+      0.0))) ; Midnight UTC 00:00
+
+(defun hindu-calendar--get-solar-longitude (gregorian-date ut-hour &optional tropical-p)
+  "Get true ecliptic longitude for a Gregorian DATE (month day year) and UT hour.
+If TROPICAL-P is nil, returns Nirayana (sidereal) longitude using Lahiri Ayanamsha.
+Otherwise, returns Sayana (tropical) longitude."
+  (let* ((julian-centuries (solar-date-to-et gregorian-date ut-hour))
+         (coords (solar-ecliptic-coordinates julian-centuries t))
+         (tropical-long (car coords)))
+    (if tropical-p
+        (hindu-calendar--normalize-degrees tropical-long)
+      ;; Apply linear approximation of Lahiri Ayanamsha
+      ;; Base Ayanamsha at J2000.0 (Jan 1, 2000) is ~23.85°
+      ;; Average rate of precession is ~1.39604° per Julian century
+      (let* ((ayanamsha (+ 23.85709235 (* julian-centuries 1.39604)))
+             (sidereal-long (- tropical-long ayanamsha)))
+        (hindu-calendar--normalize-degrees sidereal-long)))))
+
+(defun hindu-calendar--solar-from-gregorian (year month day &optional tropical-p)
+  "Calculate the Sayana or Nirayana month and day for a Gregorian date.
+Evaluates solar longitude at the exact moment of local sunrise (defaults to Ujjain).
+If TROPICAL-P is nil, calculates against the Nirayana (sidereal) framework."
+  (let* ((gregorian-date (list month day year))
+         (target-abs-date (calendar-absolute-from-gregorian gregorian-date))
+
+         ;; 1. Fetch Sunrise UT
+         (target-ut-hour (hindu-calendar--get-sunrise-ut gregorian-date))
+
+         ;; 2. Get current longitude at sunrise and determine the Rasi index
+         (current-long (hindu-calendar--get-solar-longitude gregorian-date target-ut-hour tropical-p))
+         (target-rasi-idx (floor (/ current-long 30.0)))
+
+         ;; 3. Calculate Solar Kali Yuga Epoch
+         (base-ky (+ year 3100))
+         (ky-year (cond
+                   ((<= month 2) base-ky)       ;; Jan-Feb: Always old year
+                   ((>= month 5) (1+ base-ky))  ;; May-Dec: Always new year
+                   ;; March-April: Check if Sun is still in late winter Rasis
+                   (t (if (>= target-rasi-idx 9) base-ky (1+ base-ky)))))
+
+         ;; 4. Search backward at sunrise each day to find the Sankranti transition
+         (sankranti-abs-date target-abs-date)
+         ;; Increased search limit to 35 safely covers maximum Nirayana month length
+         ;; Though a tropical solar month is normally 29-32 days
+         (search-limit (- target-abs-date 35)))
+
+    (while (and (> sankranti-abs-date search-limit)
+                (let* ((test-greg (calendar-gregorian-from-absolute sankranti-abs-date))
+                       (test-ut (hindu-calendar--get-sunrise-ut test-greg))
+                       (test-long (hindu-calendar--get-solar-longitude test-greg test-ut tropical-p)))
+                  (= (floor (/ test-long 30.0)) target-rasi-idx))) ; one rasi is 30 degrees
+      (setq sankranti-abs-date (1- sankranti-abs-date)))
+
+    ;; 5. Calculate the day (Sankranti day itself is Day 1)
+    (let* ((day-one sankranti-abs-date)
+           (solar-day (1+ (- target-abs-date day-one)))
+           (solar-month (1+ target-rasi-idx)) ; 0-11 index to 1-12 month
+           (solar-year ky-year))
+      (list solar-year solar-month solar-day))))
+
+(defun hindu-calendar--sidereal-solar-from-gregorian (year month day)
+  "Return sidereal solar date for given Gregorian (YEAR MONTH DAY)."
+  (hindu-calendar--solar-from-gregorian year month day nil))
+
+(defun hindu-calendar--tropical-solar-from-gregorian (year month day)
+    "Return tropical solar date for given Gregorian (YEAR MONTH DAY)."
+    (hindu-calendar--solar-from-gregorian year month day t))
+
+(defun hindu-calendar--get-lunar-longitude (gregorian-date ut-hour &optional tropical-p)
+  "Calculate true ecliptic longitude of the Moon using Meeus algorithms.
+If TROPICAL-P is non-nil, returns Nirayana (sidereal) longitude using Lahiri Ayanamsha."
+  (let* ((T (solar-date-to-et gregorian-date ut-hour))
+
+         ;; 1. Fundamental Arguments (in degrees)
+         (Lprime (hindu-calendar--normalize-degrees (+ 218.3164477 (* 481267.88123421 T))))
+         (D      (hindu-calendar--normalize-degrees (+ 297.8501921 (* 445267.1114034 T))))
+         (M      (hindu-calendar--normalize-degrees (+ 357.5291092 (* 35999.0502909 T))))
+         (Mprime (hindu-calendar--normalize-degrees (+ 134.9633964 (* 477198.8675055 T))))
+         (F      (hindu-calendar--normalize-degrees (+ 93.2720950  (* 483202.0175233 T))))
+
+         ;; 2. Sum of major periodic terms for longitude (converted directly to degrees)
+         (sigma-l (+
+                   (* 6.288774 (solar-sin-degrees Mprime))
+                   (* 1.274027 (solar-sin-degrees (- (* 2 D) Mprime)))
+                   (* 0.658314 (solar-sin-degrees (* 2 D)))
+                   (* 0.213618 (solar-sin-degrees (* 2 Mprime)))
+                   (* -0.185116 (solar-sin-degrees M))
+                   (* -0.114332 (solar-sin-degrees (* 2 F)))
+                   (* 0.058793 (solar-sin-degrees (- (* 2 D) (* 2 Mprime))))
+                   (* 0.057066 (solar-sin-degrees (- (* 2 D) (+ M Mprime))))
+                   (* 0.053322 (solar-sin-degrees (+ (* 2 D) Mprime)))
+                   (* 0.045758 (solar-sin-degrees (- (* 2 D) M)))
+                   (* -0.040923 (solar-sin-degrees (- Mprime (* 2 F))))
+                   (* -0.034720 (solar-sin-degrees D))
+                   (* -0.030383 (solar-sin-degrees (+ Mprime (* 2 F))))))
+
+         ;; 3. Tropical Longitude
+         (tropical-long (hindu-calendar--normalize-degrees (+ Lprime sigma-l))))
+
+    ;; 4. Apply Ayanamsha for Sidereal if requested
+    (if tropical-p
+        tropical-long
+      (let* ((ayanamsha (+ 23.85709235 (* T 1.39604)))
+             (sidereal-long (- tropical-long ayanamsha)))
+        (hindu-calendar--normalize-degrees sidereal-long)))))
+
+(defun hindu-calendar--lunar-from-gregorian (year month day &optional tropical-p)
+  "Calculate the lunar month, Paksha, Spashta Tithi, and Kali Yuga epoch at local sunrise.
+If TROPICAL-P is nil, calculates using Nirayana solar longitude."
+  (let* ((target-date (list month day year))
+         (target-abs (calendar-absolute-from-gregorian target-date))
+
+         ;; 1. Fetch Sunrise UT and absolute time
+         (target-ut-hour (hindu-calendar--get-sunrise-ut target-date))
+         (target-abs-time (+ target-abs (/ target-ut-hour 24.0)))
+
+         ;; 2. Calculate Exact Spashta Tithi at Sunrise
+         (sun-long-sunrise (hindu-calendar--get-solar-longitude target-date target-ut-hour tropical-p))
+         (moon-long-sunrise (hindu-calendar--get-lunar-longitude target-date target-ut-hour tropical-p))
+         (elongation (hindu-calendar--normalize-degrees (- moon-long-sunrise sun-long-sunrise)))
+         (tithi-idx (1+ (floor (/ elongation 12.0)))) ; 0-29 => 1-30
+
+         ;; 3. Find bounding New Moons for Lunar Month
+         ;; Sunrise times are in UTC, so new moon times must also be anchored to UTC
+         (target-jd (calendar-astro-from-absolute target-abs-time))
+         (prev-nm-jd (hindu-calendar--get-new-moon-ut (- target-jd tithi-idx)))
+         (next-nm-jd (hindu-calendar--get-new-moon-ut (+ prev-nm-jd 1))))
+
+    (let* ((prev-nm (calendar-astro-to-absolute prev-nm-jd))
+           (next-nm (calendar-astro-to-absolute next-nm-jd))
+
+           ;; 4. Evaluate Sun's longitude at both New Moon boundaries
+           (nm1-abs-date (truncate prev-nm))
+           (nm1-ut-hour (* (- prev-nm nm1-abs-date) 24.0))
+           (nm1-greg-date (calendar-gregorian-from-absolute nm1-abs-date))
+           (sun-long-start (hindu-calendar--get-solar-longitude nm1-greg-date nm1-ut-hour tropical-p))
+
+           (nm2-abs-date (truncate next-nm))
+           (nm2-ut-hour (* (- next-nm nm2-abs-date) 24.0))
+           (nm2-greg-date (calendar-gregorian-from-absolute nm2-abs-date))
+           (sun-long-end (hindu-calendar--get-solar-longitude nm2-greg-date nm2-ut-hour tropical-p))
+
+           ;; 5. Determine Lunar Month and Adhika flag
+           (rasi-idx-start (floor (/ sun-long-start 30.0)))
+           (rasi-idx-end (floor (/ sun-long-end 30.0)))
+           (is-adhika (= rasi-idx-start rasi-idx-end))
+           ; lunar new year stars when Sun is in Meena Rasi aka Vaisakha (2)
+           (lunar-month (+ 2 rasi-idx-start))
+
+           ;; 6. Calculate Lunar Kali Yuga Epoch
+           (base-ky (+ year 3101))
+           (ky-year (if (and (>= rasi-idx-start 7)
+                             (<= rasi-idx-start 10)
+                             (<= month 5))
+                        (1- base-ky)
+                      base-ky)))
+
+      (if (string= "purnimanta" (downcase hindu-calendar-lunar-type))
+          (hindu-calendar--convert-to-purnimanta ky-year lunar-month is-adhika tithi-idx)
+        (list ky-year lunar-month is-adhika tithi-idx))))) ; default is amanta
+
+; wrappers for above
+(defun hindu-calendar--sidereal-lunar-from-gregorian (year month day)
+  "Return sidereal lunar date (YEAR MONTH LEAP-MONTH-P DAY), given Gregorian (YEAR MONTH DAY)"
+    (hindu-calendar--lunar-from-gregorian year month day nil))
+
+(defun hindu-calendar--tropical-lunar-from-gregorian (year month day)
+  "Return tropical lunar date (YEAR MONTH LEAP-MONTH-P DAY), given Gregorian (YEAR MONTH DAY)"
+  (hindu-calendar--lunar-from-gregorian year month day t))
+
+(defun hindu-calendar--nakshatra-from-gregorian (year month day)
+  "Calculate the nakshatra of the day."
+  (let* ((target-date (list month day year))
+         (target-abs (calendar-absolute-from-gregorian target-date))
+
+         ;; 1. Fetch Sunrise UT and absolute time
+         (target-ut-hour (hindu-calendar--get-sunrise-ut target-date))
+         (target-abs-time (+ target-abs (/ target-ut-hour 24.0)))
+
+         ;; 2. Calculate exact longitude at Sunrise (sidereal = true)
+         (moon-long-sunrise (hindu-calendar--get-lunar-longitude target-date target-ut-hour nil))
+
+         ;; 3. Twenty-seven nakshatras span 360 degrees
+         (one-star (/ 360.0 27.0)))
+
+    (ceiling moon-long-sunrise one-star)))
 
 ;;----------------------------- PROVIDE PACKAGE ---------------------------------
 (provide 'hindu-calendar)
 ;;; hindu-calendar.el ends here
+
+(defun set-bangalore ()
+  (setq calendar-longitude 77.5775)
+  (setq calendar-latitude 12.9629)
+  (setq calendar-time-zone 330)
+)
+
+
+(defun set-espoo ()
+  (setq calendar-longitude 24.65)
+  (setq calendar-latitude 60.2)
+  (setq calendar-time-zone 120)
+)
+
+(defun set-ujjain ()
+  (setq calendar-longitude 75.7885)
+  (setq calendar-latitude 23.1765)
+  (setq calendar-time-zone 330)
+  (setq calendar-daylight-time-offset 0)
+)
+
+(defun hindu-calendar--get-new-moon-ut (jd)
+  "Calculate the Julian Day of the New Moon on or after JD.
+Forces Universal Time (UT) by neutralizing local calendar timezone variables."
+  (let ((calendar-time-zone 0)
+        (calendar-daylight-savings-starts nil)
+        (calendar-daylight-savings-ends nil)
+        (calendar-daylight-time-offset 0))
+    ; below function uses daylight savings, etc. based on TZ variable or emacs' environment
+    (lunar-new-moon-on-or-after jd)))

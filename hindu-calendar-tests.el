@@ -104,23 +104,23 @@
     ; Frontend tests
     (let ((hindu-calendar-epoch-type "vikrama"))
       (cl-assert (string= "Margasirsa-S15, 2081" (hindu-calendar-sidereal-lunar 2024 12 15)))
-      (cl-assert (string= "Kartika-29, 2081" (hindu-calendar-sidereal-solar 2024 12 15)))
+      (cl-assert (string= "Kartika-30, 2081" (hindu-calendar-sidereal-solar 2024 12 15)))
       (cl-assert (string= "Pausha-S15, 2081" (hindu-calendar-tropical-lunar 2024 12 15)))
-      (cl-assert (string= "Margasirsa-24, 2081" (hindu-calendar-tropical-solar 2024 12 15)))
+      (cl-assert (string= "Margasirsa-25, 2081" (hindu-calendar-tropical-solar 2024 12 15)))
     )
 
     (let ((hindu-calendar-epoch-type "saka"))
       (cl-assert (string= "Margasirsa-S15, 1946" (hindu-calendar-sidereal-lunar 2024 12 15)))
-      (cl-assert (string= "Kartika-29, 1946" (hindu-calendar-sidereal-solar 2024 12 15)))
+      (cl-assert (string= "Kartika-30, 1946" (hindu-calendar-sidereal-solar 2024 12 15)))
       (cl-assert (string= "Pausha-S15, 1946" (hindu-calendar-tropical-lunar 2024 12 15)))
-      (cl-assert (string= "Margasirsa-24, 1946" (hindu-calendar-tropical-solar 2024 12 15)))
+      (cl-assert (string= "Margasirsa-25, 1946" (hindu-calendar-tropical-solar 2024 12 15)))
     )
 
     ; outside of "let" block, default is Kali era
     (cl-assert (string= "Margasirsa-S15, 5125" (hindu-calendar-sidereal-lunar 2024 12 15)))
-    (cl-assert (string= "Kartika-29, 5125" (hindu-calendar-sidereal-solar 2024 12 15)))
+    (cl-assert (string= "Kartika-30, 5125" (hindu-calendar-sidereal-solar 2024 12 15)))
     (cl-assert (string= "Pausha-S15, 5125" (hindu-calendar-tropical-lunar 2024 12 15)))
-    (cl-assert (string= "Margasirsa-24, 5125" (hindu-calendar-tropical-solar 2024 12 15)))
+    (cl-assert (string= "Margasirsa-25, 5125" (hindu-calendar-tropical-solar 2024 12 15)))
 
     (let ((hindu-calendar-month-type "madhu"))
       (cl-assert (string= "Amhaspati-K09, 5127" (hindu-calendar-sidereal-lunar 2026 6 9)))
@@ -142,14 +142,14 @@
     (cl-assert (string= "Adhika-Asvina-S03, 5126" (hindu-calendar-tropical-lunar 2025 8 26)))
 
     ; solar calendars must not be affected by leap-month setting
-    (cl-assert (string= "Kartika-29, 5125" (hindu-calendar-sidereal-solar 2024 12 15)))
-    (cl-assert (string= "Margasirsa-24, 5125" (hindu-calendar-tropical-solar 2024 12 15)))
+    (cl-assert (string= "Kartika-30, 5125" (hindu-calendar-sidereal-solar 2024 12 15)))
+    (cl-assert (string= "Margasirsa-25, 5125" (hindu-calendar-tropical-solar 2024 12 15)))
 
     ; Purnimanta calendars. New year begins on Chaitra-S01 here also.
     (let ((hindu-calendar-lunar-type "purnimanta"))
       (cl-assert (string= "Phalguna-K11, 5124" (hindu-calendar-sidereal-lunar 2024 3 6)))
-      (cl-assert (string= "Phalguna-S03, 5124" (hindu-calendar-sidereal-lunar 2024 3 13)))
-      (cl-assert (string= "Chaitra-K13, 5124" (hindu-calendar-sidereal-lunar 2024 4 6))) ; year doesn't change
+      (cl-assert (string= "Phalguna-S04, 5124" (hindu-calendar-sidereal-lunar 2024 3 13)))
+      (cl-assert (string= "Chaitra-K12, 5124" (hindu-calendar-sidereal-lunar 2024 4 6))) ; year doesn't change
       (cl-assert (string= "Chaitra-S05, 5125" (hindu-calendar-sidereal-lunar 2024 4 13))) ; year changes
 
       ; with adhika masa sandwich'd between nija-jyestha
@@ -164,15 +164,14 @@
 ) ; end-defun
 
 ; tropical lunisolar adhika-masa
-; 02-Jul-2001, adhika-sravana-S12 (fails. ok for S1)
-; 26-Aug-2025, adhika-ashvina-S4 ok
-; 10-Apr-2023, adhika-vaisakha-K4 ok
+; 02-Jul-2001, adhika-sravana-S12 ok
+; 26-Aug-2025, adhika-ashvina-S3 ok
+; 10-Apr-2023, adhika-vaisakha-K4 nok (gives normal vaisakha-k4)
 ; 01-Aug-2036, adhika-bhadrapada-S10 ok
-; 02/Jun/-3001 adhika-asadha-S8 nok. goes to next month.
 ;
 ; sidereal lunisolar adhika-masa
 ; 09-Jun-2026 adhika-jyestha-K10 ok
-; 10-Apr-2029 adhika-caitra-K12 nok. There is kshaya-masa (5130 4 nil X) 4th month missing
+; 10-Apr-2029 adhika-caitra-K12 ok.
 ; 13-Sep-2031 adhika-bhadra-K12 ok
 ; 25-Jun-2034 adhika-asadha-S09 ok
 ; 20-Sep-2039 adhika-asvina-S02 ok

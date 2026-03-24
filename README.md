@@ -62,7 +62,7 @@ ELISP> (hindu-calendar-asterism 2030 6 21)
 
 `S` and `K` denote _ṡukla-pakṣa_ and _kṛṣṇa-pakṣa_ respectively. For example,
 K06 above means _kṛṣṇa-pakṣa-ṣaṣṭhī_. Years are counted as elapsed Kali-yuga
-(_gatakali_, not present Kali years).
+(_gatakali_; not present Kali-yuga years).
 
 The lunar calendars by default follow _amānta_ (or _amāvāsyānta_) scheme, i.e.,
 a month ends on new-moon day. This is the scheme used mostly in the
@@ -80,8 +80,7 @@ built-in `calendar` package:
 - `calendar-longitude`: longitude of the desired location.
 - `calendar-time-zone`: time zone (in minutes from UTC) of the desired location.
 
-If these are not customized by the user, then this packages assumes default
-values of Ujjain.
+If these are not customized by the user, then the location defaults to Ujjain.
 
 All the below options can be customized via `M-x customize-group RET hindu-calendar`.
 
@@ -112,7 +111,7 @@ Here are some typical combinations:
 
 | Category                      | `hindu-calendar-` | `hindu-calendar-month-type` | `hindu-calendar-epoch-type` |
 |:------------------------------|-------------------|-----------------------------|-----------------------------|
-| [Indian national calendar][1] | tropical-solar    | chaitra                     | saka                        |
+| [Indian national calendar][1] | indian-national   | chaitra                     | saka                        |
 | Kannadiga, Marathi, Telugu    | sidereal-lunar    | chaitra                     | saka                        |
 | Gujarati                      | sidereal-lunar    | chaitra                     | vikrama (kārttikādi)        |
 | Tamizhan                      | sidereal-solar    | chaitra                     | saka, kali                  |

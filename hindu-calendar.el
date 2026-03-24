@@ -188,14 +188,40 @@
 	    (hindu-calendar-sidereal-lunar year month day)
 	    (hindu-calendar-sidereal-solar year month day))))
 
+; https://codereview.stackexchange.com/a/179056
+; No need to handle leap years here.
+(defun hindu-calendar--day-of-year (month date)
+  "Gives ordinal day number from beginning of year. E.g. Mar 15 = 74th day of year"
+  (let ((days-upto-month '(0 31 59 90 120 151 181 212 243 273 304 334)))
+    (+ date (nth (- month 1) days-upto-month))))
+
 (defun hindu-calendar-keybindings ()
   "Setup some useful keybindings."
   (define-key calendar-mode-map (kbd "p H") 'hindu-calendar--print-to-echo))
 
 ;;;###autoload
+(defun hindu-calendar-indian-national (&optional year month date)
+  "Return date exactly matching the Indian national calendar for given Gregorian `YEAR' `MONTH' `DATE'."
+  (interactive)
+  (let* ((now (decode-time)); returns (ss mm hh day month year ...)
+         (year (or year (nth 5 now))) ; use (now) if val is not set
+         (month (or month (nth 4 now))) ; use (now) if val is not set
+         (date (or date (nth 3 now))) ; use (now) if val is not set
+         (inc-date (hindu-calendar--indian-national-from-gregorian year month date))
+         (inc-year (nth 0 inc-date)) ; unpack results
+         (inc-month (nth 1 inc-date))
+         (inc-day (nth 2 inc-date))
+	 (result ""))
+
+    (setq result (format "%s-%02d, %d"
+                         (nth inc-month hindu-calendar--chaitra-months)
+                         inc-day inc-year))
+    (if (called-interactively-p 'any) (insert result) result)))
+
+;;;###autoload
 (defun hindu-calendar-tropical-solar (&optional year month date)
   "Return Hindu tropical solar date of proleptic Gregorian `YEAR' `MONTH' `DATE'.
-It is equivalent to Indian National Calendar civil date used by the Indian govt."
+It is approximately equivalent to Indian National Calendar civil date used by the Indian govt."
   (interactive)
   (let* ((now (decode-time)); returns (ss mm hh day month year ...)
          (year (or year (nth 5 now))) ; use (now) if val is not set
@@ -295,6 +321,40 @@ It is equivalent to Indian National Calendar civil date used by the Indian govt.
 (defun hindu-calendar--normalize-degrees (degrees)
   "Normalize DEGREES to the 0-360 range."
   (mod degrees 360.0))
+
+(defun hindu-calendar--chaitra-1-absolute (year)
+  "Absolute day on which Chaitra 1 begins for given Gregorian `YEAR'."
+  (calendar-absolute-from-gregorian
+   ; Chaitra 1 = March 21 in leap years, March 22 otherwise
+   (list 3 (if (calendar-leap-year-p year) 21 22) year)))
+
+(defun hindu-calendar--indian-national-from-gregorian (year month date)
+  "Convert Gregorian `YEAR' `MONTH' `DATE' to Indian National Calendar (Rashtriya Panchang)"
+  (let* ((abs (calendar-absolute-from-gregorian (list month date year)))
+
+         ;; 1. Dates after March 21/22 are next INC year, otherwise previous INC year.
+         (start-year (if (>= abs (hindu-calendar--chaitra-1-absolute year))
+                        year
+                      (1- year)))
+         (saka-year (- start-year 78))
+
+         ;; 2. How many days since beginning of Saka year
+         (start-abs (hindu-calendar--chaitra-1-absolute start-year))
+         (day-of-year (1+ (- abs start-abs)))
+
+         ;; 3. Find month of Saka year
+         (month-lengths (if (calendar-leap-year-p start-year)
+                            '(31 31 31 31 31 31 30 30 30 30 30 30)
+                          '(30 31 31 31 31 31 30 30 30 30 30 30)))
+         (saka-month 1))
+
+   ; Loop until ordinal day number falls in given month range
+   (while (> day-of-year (car month-lengths))
+     (setq day-of-year (- day-of-year (car month-lengths)))
+     (setq month-lengths (cdr month-lengths))
+     (setq saka-month (1+ saka-month)))
+
+   (list saka-year saka-month day-of-year)))
 
 (defun hindu-calendar--get-new-moon-ut (jd)
   "Calculate the Julian Day of the New Moon on or after JD.

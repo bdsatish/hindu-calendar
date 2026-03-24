@@ -9,6 +9,25 @@
 (defalias 'to-fixed 'hindu-calendar--gregorian-to-fixed)
 (defalias 'from-fixed 'hindu-calendar--gregorian-from-fixed)
 
+(defun set-bangalore ()
+  (setq calendar-longitude 77.5775)
+  (setq calendar-latitude 12.9629)
+  (setq calendar-time-zone 330)
+)
+
+(defun set-northern-latitudes ()
+  (setq calendar-longitude 24.65)
+  (setq calendar-latitude 60.2)
+  (setq calendar-time-zone 120)
+)
+
+(defun set-ujjain ()
+  (setq calendar-longitude 75.7885)
+  (setq calendar-latitude 23.1765)
+  (setq calendar-time-zone 330)
+  (setq calendar-daylight-time-offset 0)
+)
+
 (defun hindu-calendar-tests ()
   (let ((hindu-calendar-epoch-type "kali") ; reset to default values
 	(hindu-calendar-month-type "chaitra")

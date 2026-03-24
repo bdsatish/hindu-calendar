@@ -1,11 +1,16 @@
 # hindu-calendar
 
-A simplified arithmetical Hindu calendar (panchanga) for Emacs.
+An observational Hindu calendar (drik-panchanga) for Emacs.
 
 This package provides traditional Hindu calendars (solar and lunar) using
-arithmetic based on the _mean_ motions of the Sun and Moon. It calculates tithi
-and nakshatra. It provides both tropical (sāyana) and sidereal (nirayana/Chitrapaksha
-ayanāmsa) variants. Lunar calendars can be chosen between amānta or purnimānta.
+analytic equations (Meeus-style) based on astronomical motions of the Sun and
+Moon. It calculates tithi and nakshatra. It provides both tropical (sayana) and
+sidereal (nirayana/Chitrapaksha) variants. Lunar calendar can be chosen between
+amanta or purnimanta.  Default location is Ujjain, but can be customized.
+
+Older versions of this package used to provid arithmetical Hindu calendar, which
+have been retired because the present astronomical version gives better
+accuracy.
 
 ## Installation
 
@@ -50,15 +55,14 @@ ELISP> (hindu-calendar-tropical-lunar 2030 6 21)
 ELISP> (hindu-calendar-sidereal-solar 2030 6 21)
 "Jyaishtha-07, 5131"
 ELISP> (hindu-calendar-tropical-solar 2030 6 21)
-"Jyaishtha-31, 5131"
+"Ashadha-01, 5131"
 ELISP> (hindu-calendar-asterism 2030 6 21)
 "Satabhishaj"
 ```
 
 `S` and `K` denote _ṡukla-pakṣa_ and _kṛṣṇa-pakṣa_ respectively. For example,
 K06 above means _kṛṣṇa-pakṣa-ṣaṣṭhī_. Years are counted as elapsed Kali-yuga
-(_gatakali_). Negative years are supported too, as per [proleptic Gregorian
-calendar](https://en.wikipedia.org/wiki/Proleptic_Gregorian_calendar).
+(_gatakali_, not present Kali years).
 
 The lunar calendars by default follow _amānta_ (or _amāvāsyānta_) scheme, i.e.,
 a month ends on new-moon day. This is the scheme used mostly in the
@@ -67,6 +71,17 @@ a month ends on full-moon day. [See here for
 explanation](https://www.drikpanchang.com/faq/faq-ans8.html).
 
 ## Customization
+
+Tithi is normally determined by the phase of the moon at the time of sunrise at
+a given location. This package re-uses the following options provided by Emacs'
+built-in `calendar` package:
+
+- `calendar-latitude`: latitude of the desired location.
+- `calendar-longitude`: longitude of the desired location.
+- `calendar-time-zone`: time zone (in minutes from UTC) of the desired location.
+
+If these are not customized by the user, then this packages assumes default
+values of Ujjain.
 
 All the below options can be customized via `M-x customize-group RET hindu-calendar`.
 
@@ -130,11 +145,14 @@ year.
 
 ## Accuracy
 
-This program is about as accurate as your traditional siddhantic panchangas.
-That is, it differs by a maximum of ±1 lunar day (_tithi_) or ±1 solar day or ±1
-nakshatra compared to the true values. Though rare, an _adhika-māsa_ (leap
-month) can be off by ±1 month too. Any dates in the range of ±5000 years are
-supported.
+This program is about as accurate as your traditional siddhantic panchangas or
+[drik panchanga](https://drikpanchanga.com). That is, it differs by a maximum of
+±1 lunar day (_tithi_) or ±1 nakshatra compared to the true values. Though rare,
+an _adhika-māsa_ (leap month) can be off by ±1 month too. Solar calendars are
+more accurate than lunar calendars (because moon's ecliptic longitude is not as
+precise as for the sun). Meeus-style formulas for ecliptic longitudes limit the
+supported dates to be about 1900 - 2100 CE for best results. Dates outside this
+range may work, but tend to be erroneous.
 
 Calendrical calculations are of two types: arithmetical and astronomical.
 Arithmetical calendars are simpler to understand (and implement!) because they

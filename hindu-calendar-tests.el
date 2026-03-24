@@ -123,21 +123,21 @@
     ; Frontend tests
     (let ((hindu-calendar-epoch-type "vikrama"))
       (cl-assert (string= "Margasirsa-S15, 2081" (hindu-calendar-sidereal-lunar 2024 12 15)))
-      (cl-assert (string= "Kartika-30, 2081" (hindu-calendar-sidereal-solar 2024 12 15)))
+      (cl-assert (string= "Margasirsa-01, 2081" (hindu-calendar-sidereal-solar 2024 12 15)))
       (cl-assert (string= "Pausha-S15, 2081" (hindu-calendar-tropical-lunar 2024 12 15)))
       (cl-assert (string= "Margasirsa-25, 2081" (hindu-calendar-tropical-solar 2024 12 15)))
     )
 
     (let ((hindu-calendar-epoch-type "saka"))
       (cl-assert (string= "Margasirsa-S15, 1946" (hindu-calendar-sidereal-lunar 2024 12 15)))
-      (cl-assert (string= "Kartika-30, 1946" (hindu-calendar-sidereal-solar 2024 12 15)))
+      (cl-assert (string= "Margasirsa-01, 1946" (hindu-calendar-sidereal-solar 2024 12 15)))
       (cl-assert (string= "Pausha-S15, 1946" (hindu-calendar-tropical-lunar 2024 12 15)))
       (cl-assert (string= "Margasirsa-25, 1946" (hindu-calendar-tropical-solar 2024 12 15)))
     )
 
     ; outside of "let" block, default is Kali era
     (cl-assert (string= "Margasirsa-S15, 5125" (hindu-calendar-sidereal-lunar 2024 12 15)))
-    (cl-assert (string= "Kartika-30, 5125" (hindu-calendar-sidereal-solar 2024 12 15)))
+    (cl-assert (string= "Margasirsa-01, 5125" (hindu-calendar-sidereal-solar 2024 12 15)))
     (cl-assert (string= "Pausha-S15, 5125" (hindu-calendar-tropical-lunar 2024 12 15)))
     (cl-assert (string= "Margasirsa-25, 5125" (hindu-calendar-tropical-solar 2024 12 15)))
 
@@ -161,7 +161,7 @@
     (cl-assert (string= "Adhika-Asvina-S03, 5126" (hindu-calendar-tropical-lunar 2025 8 26)))
 
     ; solar calendars must not be affected by leap-month setting
-    (cl-assert (string= "Kartika-30, 5125" (hindu-calendar-sidereal-solar 2024 12 15)))
+    (cl-assert (string= "Margasirsa-01, 5125" (hindu-calendar-sidereal-solar 2024 12 15)))
     (cl-assert (string= "Margasirsa-25, 5125" (hindu-calendar-tropical-solar 2024 12 15)))
 
     ; Purnimanta calendars. New year begins on Chaitra-S01 here also.

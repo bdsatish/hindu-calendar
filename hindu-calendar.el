@@ -364,7 +364,7 @@ If TROPICAL-P is nil, calculates against the Nirayana (sidereal) framework."
 
          ;; 2. Get current longitude at sunrise and determine the Rasi index
          (current-long (hindu-calendar--get-solar-longitude gregorian-date target-ut-hour tropical-p))
-         (target-rasi-idx (floor (/ current-long 30.0)))
+         (target-rasi-idx (/ (ceiling current-long) 30))
 
          ;; 3. Calculate Solar Kali Yuga Epoch
          (base-ky (+ year 3100))

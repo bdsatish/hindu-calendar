@@ -33,13 +33,14 @@ and add these lines your `~/.emacs` (or equivalent init file):
 
 All of the functions can be called interactively or programmatically.
 
-| Calendar type           | Function/command                  |
-|-------------------------|-----------------------------------|
-| Sidereal lunar          | M-x hindu-calendar-sidereal-lunar |
-| Tropical lunar          | M-x hindu-calendar-tropical-lunar |
-| Sidereal solar          | M-x hindu-calendar-sidereal-solar |
-| Tropical solar          | M-x hindu-calendar-tropical-solar |
-| Nakshatra (sidereal)    | M-x hindu-calendar-asterism       |
+| Calendar type            | Function/command                   |
+|--------------------------|------------------------------------|
+| Sidereal lunar           | M-x hindu-calendar-sidereal-lunar  |
+| Tropical lunar           | M-x hindu-calendar-tropical-lunar  |
+| Sidereal solar           | M-x hindu-calendar-sidereal-solar  |
+| Tropical solar           | M-x hindu-calendar-tropical-solar  |
+| Indian National Calendar | M-x hindu-calendar-indian-national |
+| Nakshatra (sidereal)     | M-x hindu-calendar-asterism        |
 
 If you are not sure which one to use, then start with the first one:
 `(hindu-calendar-sidereal-lunar)`

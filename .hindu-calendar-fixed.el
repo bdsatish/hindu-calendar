@@ -1,4 +1,4 @@
-;;; hindu-calendar.el --- Arithmetical traditional Hindu calendar (panchanga)  -*- lexical-binding:t -*-
+;;; hindu-calendar-fixed.el --- Arithmetical traditional Hindu calendar (panchanga)  -*- lexical-binding:t -*-
 
 ;; Copyright (C) 2024-2026 B.D.Satish <bdsatish@gmail.com>
 
@@ -250,3 +250,5 @@
 	 (sun ; sunrise on that date
 	  (+ (- fixed epoch) (hindu-calendar--fracday 6))))
     (1+ (mod (+ nak0 (floor sun nakshatra-day)) 27)))) ; nak. since epoch
+
+(provide 'hindu-calendar-fixed)

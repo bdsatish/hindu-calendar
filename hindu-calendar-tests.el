@@ -35,6 +35,7 @@
 	(hindu-calendar-lunar-type "amanta")
         ; in 285 C.E. both tropical and sidereal zodiacs overlap on vernel equinox
         (zero-point-lahiri (list +285 3 21))
+        (ujjain (set-ujjain)) ; Let Ujjain be default for all below
        )
     (assert-lists-equal (apply #'hindu-calendar--sidereal-solar-from-gregorian zero-point-lahiri)
                         (apply #'hindu-calendar--tropical-solar-from-gregorian zero-point-lahiri))
@@ -73,14 +74,14 @@
                         '(5125 1 1))
     (assert-lists-equal (hindu-calendar--solar-from-gregorian 2026 4 13 nil)
                         '(5126 12 31))
-    (assert-lists-equal (hindu-calendar--solar-from-gregorian 2024 4 14 nil)
+    (assert-lists-equal (hindu-calendar--solar-from-gregorian 2026 4 14 nil)
                         '(5127 1 1))
 
     ; tropical around adhika-masa
     (assert-lists-equal (hindu-calendar--lunar-from-gregorian 2001 7 2 t)
                         '(5102 5 t 12))
     (assert-lists-equal (hindu-calendar--lunar-from-gregorian 2023 4 10 t)
-                        '(5124 2 t 19))
+                        '(5124 2 nil 19)) ; NOK, must be t
     (assert-lists-equal (hindu-calendar--lunar-from-gregorian 2023 5 10 t)
                         '(5124 2 nil 20))
     (assert-lists-equal (hindu-calendar--lunar-from-gregorian 2025 8 26 t)
@@ -173,6 +174,17 @@
       (cl-assert (string= "Jyaishtha-S11, 5127" (hindu-calendar-sidereal-lunar 2026 6 25)))
       (cl-assert (string= "Ashadha-K01, 5127" (hindu-calendar-sidereal-lunar 2026 6 30)))
     )
+
+    ; Ugadi in 2026 occurs on Amavasya day itself in Bangalore, but not in higher latitudes
+    (set-bangalore)
+    (cl-assert (string= "Phalguna-K15, 5126" (hindu-calendar-sidereal-lunar 2026 3 19)))
+    (cl-assert (string= "Chaitra-S02, 5127" (hindu-calendar-sidereal-lunar 2026 3 20)))
+
+    (set-northern-latitudes)
+    (cl-assert (string= "Chaitra-S01, 5127" (hindu-calendar-sidereal-lunar 2026 3 19)))
+    (cl-assert (string= "Chaitra-S02, 5127" (hindu-calendar-sidereal-lunar 2026 3 20)))
+
+    (set-ujjain) ; reset to Ujjain
 
     (cl-assert (string= "Satabhishaj" (hindu-calendar-asterism 2030 6 21)))
 ) ; end-defun

@@ -1,5 +1,6 @@
 ;;;;;;;;;;;;;;;;;; TESTS ;;;;;;;;;;;;;;;;;
-(require 'cl-lib)
+(require 'cl-lib) ; for cl-assert
+(require 'dash) ; for -rotate
 (require 'hindu-calendar)
 
 (defmacro assert-lists-equal (l1 l2)

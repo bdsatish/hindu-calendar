@@ -202,7 +202,8 @@
 
 ;;;###autoload
 (defun hindu-calendar-indian-national (&optional year month date)
-  "Return date exactly matching the Indian national calendar for given Gregorian `YEAR' `MONTH' `DATE'."
+  "Return date exactly matching the Indian national calendar for given Gregorian
+`YEAR' `MONTH' `DATE'."
   (interactive)
   (let* ((now (decode-time)); returns (ss mm hh day month year ...)
          (year (or year (nth 5 now))) ; use (now) if val is not set
@@ -221,8 +222,9 @@
 
 ;;;###autoload
 (defun hindu-calendar-tropical-solar (&optional year month date)
-  "Return Hindu tropical solar date of proleptic Gregorian `YEAR' `MONTH' `DATE'.
-It is approximately equivalent to Indian National Calendar civil date used by the Indian govt."
+  "Return Hindu tropical solar date of Gregorian `YEAR' `MONTH' `DATE'. It is
+approximately equivalent to Indian National Calendar civil date used by the
+Indian govt."
   (interactive)
   (let* ((now (decode-time)); returns (ss mm hh day month year ...)
          (year (or year (nth 5 now))) ; use (now) if val is not set
@@ -330,7 +332,8 @@ It is approximately equivalent to Indian National Calendar civil date used by th
    (list 3 (if (calendar-leap-year-p year) 21 22) year)))
 
 (defun hindu-calendar--indian-national-from-gregorian (year month date)
-  "Convert Gregorian `YEAR' `MONTH' `DATE' to Indian National Calendar (Rashtriya Panchang)."
+  "Convert Gregorian `YEAR' `MONTH' `DATE' to Indian National Calendar
+[Rashtriya Panchang]."
   (let* ((abs (calendar-absolute-from-gregorian (list month date year)))
 
          ;; 1. Dates after March 21/22 are next INC year, otherwise previous INC year.
@@ -398,9 +401,9 @@ Falls back to UTC 0h if no sunrise exists (e.g., polar night/day)."
       0.0))) ; Midnight UTC 00:00
 
 (defun hindu-calendar--get-solar-longitude (gregorian-date ut-hour &optional tropical-p)
-  "Get true ecliptic longitude for a Gregorian DATE (month day year) and UT hour.
-If TROPICAL-P is nil, returns Nirayana (sidereal) longitude using Lahiri Ayanamsha.
-Otherwise, returns Sayana (tropical) longitude."
+  "Get true ecliptic longitude for a GREGORIAN-DATE (month day year) and UT hour.
+If TROPICAL-P is nil, returns Nirayana (sidereal) longitude using Lahiri
+Ayanamsha. Otherwise, returns Sayana (tropical) longitude."
   (let* ((julian-centuries (solar-date-to-et gregorian-date ut-hour))
          (coords (solar-ecliptic-coordinates julian-centuries t))
          (tropical-long (car coords)))
@@ -414,9 +417,9 @@ Otherwise, returns Sayana (tropical) longitude."
         (hindu-calendar--normalize-degrees sidereal-long)))))
 
 (defun hindu-calendar--solar-from-gregorian (year month day &optional tropical-p)
-  "Calculate the Sayana or Nirayana month and day for a Gregorian date.
-Evaluates solar longitude at the exact moment of local sunrise (defaults to Ujjain).
-If TROPICAL-P is nil, calculates against the Nirayana (sidereal) framework."
+  "Calculate the Sayana or Nirayana month and day for Gregorian `YEAR' `MONTH'
+`DAY'.  Evaluates solar longitude at the exact moment of local sunrise (defaults
+to Ujjain).  If TROPICAL-P is nil, returns as per Nirayana (sidereal) mode."
   (let* ((gregorian-date (list month day year))
          (target-abs-date (calendar-absolute-from-gregorian gregorian-date))
 
@@ -469,7 +472,8 @@ If TROPICAL-P is nil, calculates against the Nirayana (sidereal) framework."
 
 (defun hindu-calendar--get-lunar-longitude (gregorian-date ut-hour &optional tropical-p)
   "Calculate true ecliptic longitude of the Moon using Meeus algorithms.
-If TROPICAL-P is non-nil, returns Nirayana (sidereal) longitude using Lahiri Ayanamsha."
+If TROPICAL-P is non-nil, returns Nirayana (sidereal) longitude using Lahiri
+Ayanamsha."
   (let* ((T (solar-date-to-et gregorian-date ut-hour))
 
          ;; 1. Fundamental Arguments (in degrees)
@@ -506,8 +510,8 @@ If TROPICAL-P is non-nil, returns Nirayana (sidereal) longitude using Lahiri Aya
         (hindu-calendar--normalize-degrees sidereal-long)))))
 
 (defun hindu-calendar--lunar-from-gregorian (year month day &optional tropical-p)
-  "Calculate the lunar month, Paksha, Spashta Tithi, and Kali Yuga epoch at local sunrise.
-If TROPICAL-P is nil, calculates using Nirayana solar longitude."
+  "Calculate the lunar month, tithi, and Kali Yuga epoch at
+local sunrise. If TROPICAL-P is nil, calculates using Nirayana solar longitude."
   (let* ((target-date (list month day year))
          (target-abs (calendar-absolute-from-gregorian target-date))
 
@@ -563,17 +567,18 @@ If TROPICAL-P is nil, calculates using Nirayana solar longitude."
 
 ; wrappers for above
 (defun hindu-calendar--sidereal-lunar-from-gregorian (year month day)
-  "Return sidereal lunar date (YEAR MONTH LEAP-MONTH-P DAY), given Gregorian (YEAR MONTH DAY)."
+  "Return sidereal lunar date (YEAR MONTH LEAP-MONTH-P DAY), given Gregorian
+`YEAR' `MONTH' `DAY'."
     (hindu-calendar--lunar-from-gregorian year month day nil))
 
 (defun hindu-calendar--tropical-lunar-from-gregorian (year month day)
-  "Return tropical lunar date (YEAR MONTH LEAP-MONTH-P DAY), given Gregorian (YEAR MONTH DAY)."
+  "Return tropical lunar date (YEAR MONTH LEAP-MONTH-P DAY), given Gregorian
+`YEAR' `MONTH' `DAY'."
   (hindu-calendar--lunar-from-gregorian year month day t))
 
 (defun hindu-calendar--nakshatra-from-gregorian (year month day)
-  "Calculate the nakshatra of the day."
+  "Calculate the nakshatra of Gregorian `YEAR' `MONTH' `DAY'"
   (let* ((target-date (list month day year))
-         (target-abs (calendar-absolute-from-gregorian target-date))
 
          ;; 1. Fetch Sunrise UT and absolute time
          (target-ut-hour (hindu-calendar--get-sunrise-ut target-date))

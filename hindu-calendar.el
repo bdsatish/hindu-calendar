@@ -108,7 +108,7 @@
 ; Spelling as per the Rashtriya Panchang
 (defconst hindu-calendar--chaitra-months
   (list "" "Chaitra" "Vaisakha" "Jyaishtha" "Ashadha" "Sravana" "Bhadrapada"
-        "Asvina" "Kartika" "Margasirsa" "Pausha" "Magha" "Phalguna" "Chaitra"))
+        "Asvina" "Kartika" "Margasirsa" "Pausha" "Magha" "Phalguna"))
 
 (defconst hindu-calendar--mesha-months
   (list "" "Mesha" "Vrishabha" "Mithuna" "Karkata" "Simha" "Kanya"
@@ -116,11 +116,11 @@
 
 (defconst hindu-calendar--madhu-months
   (list "" "Madhu" "Madhava" "Sukra" "Suchi" "Nabhas" "Nabhasya"
-	"Isha" "Urja" "Sahas" "Sahasya" "Tapas" "Tapasya" "Madhu"))
+	"Isha" "Urja" "Sahas" "Sahasya" "Tapas" "Tapasya"))
 
 (defconst hindu-calendar--kesava-months
   (list "" "Vishnu" "Madhusudana" "Trivikrama" "Vamana" "Sridhara" "Hrishikesa"
-	"Padmanabha" "Damodara" "Kesava" "Narayana" "Madhava" "Govinda" "Vishnu"))
+	"Padmanabha" "Damodara" "Kesava" "Narayana" "Madhava" "Govinda"))
 
 (defconst hindu-calendar--dhata-months
   (list "" "Dhata" "Aryama" "Mitra" "Varuna" "Indra" "Vivasvan"
@@ -330,7 +330,7 @@ It is approximately equivalent to Indian National Calendar civil date used by th
    (list 3 (if (calendar-leap-year-p year) 21 22) year)))
 
 (defun hindu-calendar--indian-national-from-gregorian (year month date)
-  "Convert Gregorian `YEAR' `MONTH' `DATE' to Indian National Calendar (Rashtriya Panchang)"
+  "Convert Gregorian `YEAR' `MONTH' `DATE' to Indian National Calendar (Rashtriya Panchang)."
   (let* ((abs (calendar-absolute-from-gregorian (list month date year)))
 
          ;; 1. Dates after March 21/22 are next INC year, otherwise previous INC year.
@@ -453,6 +453,10 @@ If TROPICAL-P is nil, calculates against the Nirayana (sidereal) framework."
            (solar-day (1+ (- target-abs-date day-one)))
            (solar-month (1+ target-rasi-idx)) ; 0-11 index to 1-12 month
            (solar-year ky-year))
+
+      ;; fix off-by-1 error (1st of Chaitra)
+      (setq solar-year (if (= 13 solar-month) (1+ solar-year) solar-year))
+      (setq solar-month (if (= 13 solar-month) 1 solar-month))
       (list solar-year solar-month solar-day))))
 
 (defun hindu-calendar--sidereal-solar-from-gregorian (year month day)
@@ -542,7 +546,8 @@ If TROPICAL-P is nil, calculates using Nirayana solar longitude."
            (rasi-idx-end (floor (/ sun-long-end 30.0)))
            (is-adhika (= rasi-idx-start rasi-idx-end))
            ; lunar new year stars when Sun is in Meena Rasi aka Vaisakha (2)
-           (lunar-month (+ 2 rasi-idx-start))
+           (lunar-month (+ 2 rasi-idx-start)) ; 0-11 --> 2-13
+           (lunar-month (if (= lunar-month 13) 1 lunar-month)) ; 13th month is just chaitra
 
            ;; 6. Calculate Lunar Kali Yuga Epoch
            (base-ky (+ year 3101))
@@ -558,11 +563,11 @@ If TROPICAL-P is nil, calculates using Nirayana solar longitude."
 
 ; wrappers for above
 (defun hindu-calendar--sidereal-lunar-from-gregorian (year month day)
-  "Return sidereal lunar date (YEAR MONTH LEAP-MONTH-P DAY), given Gregorian (YEAR MONTH DAY)"
+  "Return sidereal lunar date (YEAR MONTH LEAP-MONTH-P DAY), given Gregorian (YEAR MONTH DAY)."
     (hindu-calendar--lunar-from-gregorian year month day nil))
 
 (defun hindu-calendar--tropical-lunar-from-gregorian (year month day)
-  "Return tropical lunar date (YEAR MONTH LEAP-MONTH-P DAY), given Gregorian (YEAR MONTH DAY)"
+  "Return tropical lunar date (YEAR MONTH LEAP-MONTH-P DAY), given Gregorian (YEAR MONTH DAY)."
   (hindu-calendar--lunar-from-gregorian year month day t))
 
 (defun hindu-calendar--nakshatra-from-gregorian (year month day)
@@ -572,7 +577,6 @@ If TROPICAL-P is nil, calculates using Nirayana solar longitude."
 
          ;; 1. Fetch Sunrise UT and absolute time
          (target-ut-hour (hindu-calendar--get-sunrise-ut target-date))
-         (target-abs-time (+ target-abs (/ target-ut-hour 24.0)))
 
          ;; 2. Calculate exact longitude at Sunrise (sidereal = true)
          (moon-long-sunrise (hindu-calendar--get-lunar-longitude target-date target-ut-hour nil))

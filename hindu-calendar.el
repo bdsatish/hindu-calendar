@@ -528,7 +528,7 @@ local sunrise. If TROPICAL-P is nil, calculates using Nirayana solar longitude."
          ;; 3. Find bounding New Moons for Lunar Month
          ;; Sunrise times are in UTC, so new moon times must also be anchored to UTC
          (target-jd (calendar-astro-from-absolute target-abs-time))
-         (prev-nm-jd (hindu-calendar--get-new-moon-ut (- target-jd tithi-idx)))
+         (prev-nm-jd (hindu-calendar--get-new-moon-ut (- target-jd tithi-idx 1)))
          (next-nm-jd (hindu-calendar--get-new-moon-ut (+ prev-nm-jd 1))))
 
     (let* ((prev-nm (calendar-astro-to-absolute prev-nm-jd))

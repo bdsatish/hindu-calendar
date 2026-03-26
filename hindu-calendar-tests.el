@@ -7,8 +7,13 @@
     `(cl-assert (not (cl-set-difference ,l1 ,l2)))
 )
 
+; Fixed date aka Absolute aka Rate Die epoch = 1 Jan 1 CE (Dershowitz / Reingold convention)
 (defun to-fixed (year month day) (calendar-absolute-from-gregorian (list month day year)))
 (defun from-fixed  (fixed) (-rotate 1 (calendar-gregorian-from-absolute fixed)))
+
+; astro = Julian Day Number (JDN) convention used by astronomers
+(defun to-jdn (year month day) (calendar-astro-from-absolute (to-fixed year month day)))
+(defun from-jdn (jdn) (from-fixed (ceiling (calendar-astro-to-absolute jdn)))) ; (floor?)
 
 (defun set-bangalore ()
   (setq calendar-longitude 77.5775)
@@ -81,13 +86,13 @@
     (assert-lists-equal (hindu-calendar--lunar-from-gregorian 2001 7 2 t)
                         '(5102 5 t 12))
     (assert-lists-equal (hindu-calendar--lunar-from-gregorian 2023 4 10 t)
-                        '(5124 2 nil 19)) ; NOK, must be t
+                        '(5124 2 t 19))
     (assert-lists-equal (hindu-calendar--lunar-from-gregorian 2023 5 10 t)
                         '(5124 2 nil 20))
     (assert-lists-equal (hindu-calendar--lunar-from-gregorian 2025 8 26 t)
                         '(5126 7 t 3))
     (assert-lists-equal (hindu-calendar--lunar-from-gregorian 2025 9 26 t)
-                        '(5126 8 nil 4)) ; NOK, month must be 7
+                        '(5126 7 nil 4))
     (assert-lists-equal (hindu-calendar--lunar-from-gregorian 2036 8 1 t)
                         '(5137 6 t 10))
     (assert-lists-equal (hindu-calendar--lunar-from-gregorian 2036 9 1 t)
@@ -192,7 +197,7 @@
 ; tropical lunisolar adhika-masa
 ; 02-Jul-2001, adhika-sravana-S12 ok
 ; 26-Aug-2025, adhika-ashvina-S3 ok
-; 10-Apr-2023, adhika-vaisakha-K4 nok (gives normal vaisakha-k4)
+; 10-Apr-2023, adhika-vaisakha-K4 ok
 ; 01-Aug-2036, adhika-bhadrapada-S10 ok
 ;
 ; sidereal lunisolar adhika-masa

@@ -177,29 +177,6 @@
 	(concat "Adhika-" (nth month hindu-calendar--chaitra-months))
 	(nth month hindu-calendar--chaitra-months))))) ; default is Chaitra-type
 
-(defun hindu-calendar--print-to-echo ()
-  "Print Hindu sidereal dates to echo area."
-  (interactive)
-  (let* ((date (calendar-cursor-to-date))
-         (day (nth 1 date))
-         (month (nth 0 date))
-         (year (nth 2 date)))
-    (message "Hindu date: Lunar %s nakshatra %s; Solar %s"
-	    (hindu-calendar-asterism year month day)
-	    (hindu-calendar-sidereal-lunar year month day)
-	    (hindu-calendar-sidereal-solar year month day))))
-
-; https://codereview.stackexchange.com/a/179056
-; No need to handle leap years here.
-(defun hindu-calendar--day-of-year (month date)
-  "Gives ordinal day number from beginning of year. E.g. Mar 15 = 74th day of year"
-  (let ((days-upto-month '(0 31 59 90 120 151 181 212 243 273 304 334)))
-    (+ date (nth (- month 1) days-upto-month))))
-
-(defun hindu-calendar-keybindings ()
-  "Setup some useful keybindings."
-  (define-key calendar-mode-map (kbd "p H") 'hindu-calendar--print-to-echo))
-
 ;;;###autoload
 (defun hindu-calendar-indian-national (&optional year month date)
   "Return date exactly matching the Indian national calendar for given Gregorian
@@ -311,6 +288,55 @@ Indian govt."
          (nakshatra (hindu-calendar--nakshatra-from-gregorian year month date))
 	 (result (nth nakshatra hindu-calendar--nakshatra-names)))
     (if (called-interactively-p 'any) (insert result) result)))
+
+;;------------------------------ CALENDAR INTEGRATION --------------------------
+
+(defun hindu-calendar--print-to-echo ()
+  "Print Hindu sidereal dates to echo area."
+  (interactive)
+  (let* ((date (calendar-cursor-to-date))
+         (day (nth 1 date))
+         (month (nth 0 date))
+         (year (nth 2 date)))
+    (message "Hindu date: Lunar %s nakshatra %s; Solar %s"
+	    (hindu-calendar-asterism year month day)
+	    (hindu-calendar-sidereal-lunar year month day)
+	    (hindu-calendar-sidereal-solar year month day))))
+
+(defun hindu-calendar--all-string (&optional date)
+  "Generate the Hindu calendar date string for the given DATE."
+  (let* ((d (or date (calendar-cursor-to-date t)))
+         (month (nth 0 d))
+         (day (nth 1 d))
+         (year (nth 2 d)))
+    (format "Hindu date: %s nakshatra %s V.E.; sāyana %s K.E.; Solar: %s S.E.; sāyana %s K.E.\nIndian National Calendar: %s"
+            (hindu-calendar-asterism year month day)
+            (let ((hindu-calendar-month-type "chaitra")
+                  (hindu-calendar-epoch-type "vikrama"))
+              (hindu-calendar-sidereal-lunar year month day))
+            (let ((hindu-calendar-month-type "madhu")
+                  (hindu-calendar-epoch-type "kali"))
+              (hindu-calendar-tropical-lunar year month day))
+            (let ((hindu-calendar-month-type "mesha")
+                  (hindu-calendar-epoch-type "saka"))
+              (hindu-calendar-sidereal-solar year month day))
+            (let ((hindu-calendar-month-type "dhata")
+                  (hindu-calendar-epoch-type "kali"))
+              (hindu-calendar-tropical-solar year month day))
+            (hindu-calendar-indian-national year month day))))
+
+(defun hindu-calendar--append-dates (orig-fn &optional date)
+  "Advice to append the Hindu date to `calendar-other-dates`."
+  (let ((standard-dates (funcall orig-fn date)))
+    ;; Append our custom string to the native list
+    (append standard-dates (list (hindu-calendar--all-string date)))))
+
+(defun hindu-calendar-keybindings ()
+  "Setup some useful keybindings."
+  (define-key calendar-mode-map (kbd "p H") 'hindu-calendar--print-to-echo)
+  ;; Hook the advice into the calendar system
+  ;; Typing "p o" in M-x calendar prints all other dates
+  (advice-add 'calendar-other-dates :around #'hindu-calendar--append-dates))
 
 ;;------------------------------ BACKEND CODE ----------------------------------
 

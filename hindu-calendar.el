@@ -331,6 +331,7 @@ Indian govt."
     ;; Append our custom string to the native list
     (append standard-dates (list (hindu-calendar--all-string date)))))
 
+;;;###autoload
 (defun hindu-calendar-keybindings ()
   "Setup some useful keybindings."
   (define-key calendar-mode-map (kbd "p H") 'hindu-calendar--print-to-echo)
